@@ -1,0 +1,275 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Kvantni Mnogodelčni Sistemi\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 28. 3. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Heisenbergov model}
+Obravnavamo verigo n spinov. Heisenbergov model s sklopitvijo, ki ustreza antiferomagnetu, opiše Hamiltonjan:
+\begin{equation*}
+H = \sum_{j=1}^n \vec{\sigma}_j \cdot \vec{\sigma}_{j+1} = \sum_{j=1}^n (2\sigma_j^+ \sigma_{j+1}^- + 2 \sigma_j^- \sigma_{j+1}^+ \sigma_j^z \sigma_{j+1}^z),
+\end{equation*}
+kjer je $\sigma_j$ Paulijeva matrika, ki deluje le na j-tem mestu s periodičnimi robnimi pogoji $\sigma_{n+1}=\sigma_1$.
+
+Zanimal nas bo časovni razvoj, za katerega moramo izračunati $exp(-it H)$ in termično povprečje, za  katerega moramo izračunati $\rho = Z^{-1} exp(-H/T)$.
+V obeh primerih moramo torej izračunati količino tipa $e^{zH}=e^{z(A+B)}$ in spet si bomo pomagali s Trotter-Suzukijevim razcepom:
+\begin{align*}
+&e^{z(A+B)} = S_n(z) + \mathcal{O}(z^{n+1}), \\
+& S_2(z) = exp \left( \frac{z}{2}A \right) exp(z B) exp \left( \frac{z}{2}A \right), \\
+& S_4(z) = S_2(x_1 z) S_2 (x_0 z) S_2( x_1 z), \\
+&x_0 = -\frac{2^{1/3}}{2-2^{1/3}}, x_1 = \frac{1}{2 - 2^{1/3}}.
+\end{align*}
+
+Odločiti se moramo še, kako bomo razbili Hamiltonjan na dva dela $H=A+B$. To naredimo tako, da sta $A$ in $B$ lahko izračunljiva, kar je res če izberemo na primer:
+\begin{align*}
+&A=\sum_{j=1}^{n/2} \vec{\sigma}_{2j-1} \cdot \vec{\sigma}_{2j}, \\
+&B=\sum_{j=1}^{n/2} \vec{\sigma}_{2j} \cdot \vec{\sigma}_{2j+1}. 
+\end{align*}
+Členi v zgornjih vsotah komutirajo, kar pomeni, da velja:
+\begin{align*}
+&e^{zA}=\prod_{j=1}^{n/2} exp(z\  \vec{\sigma}_{2j-1} \cdot \vec{\sigma}_{2j}), \\
+&e^{zB}=\prod_{j=1}^{n/2} exp(z\  \vec{\sigma}_{2j} \cdot \vec{\sigma}_{2j+1}). 
+\end{align*}
+
+Delovanje posameznega izmed faktorjev na desni pa znamo zapisat kot:
+\begin{equation*}
+U(z) = exp(z \vec{\sigma}_1 \cdot \vec{\sigma}_2) = e^{-z}
+\begin{bmatrix}
+e^{2z} & 0 & 0 & 0 \\
+0 & \cosh 2z & \sinh 2z & 0 \\
+0 & \sinh 2z & \cosh 2z & 0 \\
+0 & 0 & 0 & e^{2z} 
+\end{bmatrix}
+\end{equation*}
+Če predstavimo stanje v lastni bazi $\sigma_j^z$ 
+\begin{equation*}
+|\psi \rangle = \sum_{b_1, \dots , b_n} \psi_{b_1 \dots b_n} |b_1, \dots, b_n \rangle,
+\end{equation*}
+lahko delovanje operatorja $U(z)$ formuliramo s pomočjo njegovega matričnega elementa:
+\begin{equation*}
+\psi'_{b_1, \dots , b_n} = \sum_{b, b' = 0}^1 U_{(b_j,b_{j+1}),(b,b')} \psi_{b_1, \dots b_{j-1}, b, b' , b_{j+2}, \dots, b_n}.
+\end{equation*}
+Opremljeni z algoritmom za izračun $e^{zH}$ za naš Hamiltonjan lahko računamo razna povprečja in sicer korelacijsko funkcijo:
+\begin{equation*}
+\langle X(t) X(0) \rangle = \frac{1}{N_\psi} \sum \langle \psi | \exp (i t H) X \exp (-i t H) X | \psi \rangle
+\end{equation*}
+V vsoti naključno izbiramo funkcije $\psi$, tako da po normalni porazdelitvi izberemo realni in imaginarni del koeficientov pred baznimi funkcijami in to normiramo, da velja $|\psi|^2 = 1$.
+
+Računamo lahko tudi termična povprečja, če se premikamo za imaginarni čas:
+\begin{equation*}
+\langle X \rangle_\beta = \frac{1}{N_\psi} \sum \langle \psi | \exp (-\beta/2 H) X \exp (-\beta/2 H) X | \psi \rangle
+\end{equation*}
+
+\section*{Naloga}
+Za primer Heisenbergove verige nariši graf proste energije $F(\beta) = -\frac{1}{\beta} \log Z(\beta)$ in energije $\langle H \rangle$. Limita $\beta \to \infty$ da energijo osnovnega stanja.
+Najprej stestirajmo metodo:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake2.pdf}
+\end{subfigure}
+\caption*{Na levi sliki je prikazan časovni razvoj naključno generiranega stanja z časovnim korakom $\Delta = 0.01$. Videti je mogoče, da se norma ohranja in je torej Hamiltonjan, izračunan po metodah v uvodu res hermitski. Na je prikazana relativna napaka proste energije v odvisnosti od koraka v imaginarnem času (glede na referenco $\Delta = 0.001$). Opazimo lahko, da bo že časovni korak $\Delta$ približno 0.1 dovolj natančen.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake31.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake3.pdf}
+\end{subfigure}
+\caption*{Na levi sliki je prikazano spreminjanje proste energije v odvisnosti od velikosti vzorca, po katerem povprečujemo. Za večje $N_\psi$ seveda energija fluktuira okoli nekega povprečja, katerega lahko že z zelo majhnim $N_\psi$ dobro aproksimiramo. Na desni sliki je ta odvisnost prikazana za več različnih velikosti verig $N$. Tu se še bolje vidi, da rezultat ni močno odvisen of $N_\psi$. Zaradi varnosti bo v preostanku naloge vseeno uporabljen $N_\psi=5$.}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/F.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/F2.pdf}
+\end{subfigure}
+\caption*{Na levi je prikazana odvisnost proste energije od inverzne temperature $\beta$ za več velikosti verige $N$. Ta monotono pada in ima asimptoto - energijo osnovnega stanja. Na desni je prikazana odvisnost proste energije pri več fiksnih $\beta$ od velikosti verige N. Opazimo...}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/E.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/E2.pdf}
+\end{subfigure}
+\caption*{Na levi je prikazana odvisnost energije od inverzne temperature $\beta$ za več velikosti verige $N$. Opazimo, da ta monotono pada in ima asimptoto (energijo osnovnega stanja). Na desni vidimo odvisnost energije osnovnega stanja velikosti verige N. Z črtkanoim grafom je prikazan še rezultat, pridobljen z direktno diagonalizacijo Hamiltonjana.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/F3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/E3.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih sta energiji glede na podatke do $N=10$ ekstrapolirani (z linearno funkcijo) do $N=30$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/hitrost.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/hitrost2.pdf}
+\end{subfigure}
+\caption*{Prikazan je čas izvajanja algoritma za določitev energije osnovnega stanja. Diagonalizacija je na začetku hitrejša, vendar smo pri tej le-tej močno omejeni, saj velikosti matrik hitro rastejo in je pri fiksnem $N$ treba shraniti $2^{2N+1}$ števil , medtem ko je za Trotter-Suzukijev razcep treba shranjevati le vektorje, torej $2^{N+1}$ številk. Pri $N=6$ je Trotter-Suzuki že hitrejši od direktne diagonalizacije, za $N=8$ pa je ta že tako počasna, da je sploh nisem do konca računal. Na desni slike so prikazane še energije, ki jih data obe metodi. Tu ni vidnih nobenih razlik.}
+\end{figure}
+
+Izračunajmo še avtokorelacijske funkcije magnetizacije $C(t) = \langle \sigma^z_j (t) \sigma^z_j \rangle$ pri neskončni temperaturi. 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacije1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacije2.pdf}
+\end{subfigure}
+\caption*{Prikazane so avtokorelacijske funkcije magnetizacije $\sigma^z$ za več velikosti verig $N$. Za $N=2$ ima ta zelo izrazito periodo, za večje $N$ pa periodičnost izginja. Prav tako na obliko avtokorelacijske funkcije vpliva tudi indeks kubita $j$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacije3.pdf}
+\end{subfigure}
+\caption*{Prikazane so avtokorelacijske funkcije magnetizacije $\sigma^z$ za več velikosti verig $N$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacije4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacije5.pdf}
+\end{subfigure}
+\caption*{Na grafih je poleg korelacijskih funkcij magnetizacije prikazana še povprečna vrednost magnetizacije same. Pri $N=4$ tako vidimo, da je tudi magnetizacija res periodična z isto periodo kot korelacijska funkcija, kot je smiselno. Na desni pa ravno obratno nista ne magnetizacija, ne korelacijska funkcija zares periodični.}
+\end{figure}
+
+Poglejmo si še, kako je s korelacijo spinskega toka $C(t) = \langle J (t) J \rangle$ pri neskončni temperaturi, kjer je spinski tok definiran kot
+\begin{align*}
+&J = \sum_{j=1}^N J_j \\
+&J_j = \sigma^x_j \sigma^y_{j+1} - \sigma^y_j \sigma^x_{j+1}
+\end{align*}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacijetok11.pdf}
+\end{subfigure}
+\caption*{Prikazane so (normirane) avtokorelacijske funkcije spinskega toka $J$ za več velikosti verig $N$. Podobno kot prej ima korelacijska funkcija izrazito periodo za majhne N, ki pa se pri večjih $N$ zašumi. Za $N=2$ je v tem primeru korelacija konstanta in enaka 0.}
+\end{figure}
+
+Zanima nas, ali lahko definiramo difuzijsko konstanto za primer spinskega toka preko Kubove formule:
+
+\begin{equation*}
+D = \int_0^\infty C(s) \textup{d}s
+\end{equation*}
+Zdi se, da to ne bo mogoče, saj korelacijske funkcije ne padajo in so vedno večje od 0. Ta integral torej divergira.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/korelacijetok2.pdf}
+\end{subfigure}
+\caption*{Prikazana je difuzijska konstanta kot funkcija zgornje meje integrala v njeni definiciji za N=4,6. Če bi korelacijska funkcija dovolj hitro padala, bi graf imel končno asimptoto.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja1.pdf}
+\end{subfigure}
+\caption*{Prikazan je časovni razvoj magnetizacije na verigi. Na y osi je čas, magnetizacija pa je prikazana z barvo. Poleg tega je nad spini prikazan še trenutni spinski tok.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja2.pdf}
+\end{subfigure}
+\caption*{Prikazan je časovni razvoj magnetizacije na verigi, tokrat za večji čas. Na y osi je čas, magnetizacija pa je prikazana z barvo. Poleg tega je nad spini prikazan še trenutni spinski tok.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja3.pdf}
+\end{subfigure}
+\caption*{Prikazan je časovni razvoj magnetizacije na verigi, kjer je začetno stanje 0 na vseh spinih razen na desnem, kjer je 1. Na y osi je čas, magnetizacija pa je prikazana z barvo. Poleg tega je nad spini prikazan še trenutni spinski tok. Po barvi sodeč poteka nekakšna "difuzija spina" po verigi, tok pa včasih kaže v nenavadne smeri. Očitno je s tokom nekje neka napaka.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja4.pdf}
+\end{subfigure}
+\caption*{Prikazan je časovni razvoj magnetizacije na verigi za še en drugačen primer začetne verige. Na y osi je čas, magnetizacija pa je prikazana z barvo. Poleg tega je nad spini prikazan še trenutni spinski tok.}
+\end{figure}
+\end{document}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga8.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga9.pdf}
+\end{subfigure}
+\caption*{Primera $a=5$ in $a=10$ še dodatno potrdita, da večanje parametra $a$ zelo močno vpliva na "zrušenje" oblike valovnega paketa.}
+\end{figure}
+
+

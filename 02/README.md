@@ -1,0 +1,1 @@
+Diagonalizing the Hamiltonian in scope of perturbation theory. Semi classical picture was used to determine the number of the converged solutions. Using Lanczos algorithm to find the lowest eigenstates.

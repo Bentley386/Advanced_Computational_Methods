@@ -1,0 +1,204 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Kvantni Monte Carlo\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 25. 4. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Algoritem}
+
+Klasični metropolisov algoritem želimo uporabiti za izračun opazljivk v kvantnih sistemih. Obravnavamo Hamiltonjan kanonične oblike:
+\begin{align*}
+&H=T+V \\
+&T = -\frac{1}{2} \sum_{j=1}^N \frac{\partial}{\partial q_j} \\
+&V = V(q)
+\end{align*}
+Pogosto želimo izračunati particijsko funkcijo in termične pričakovane vrednosti:
+\begin{align*}
+&Z(\beta) = \mathrm{Tr} \exp (- \beta H) \\
+&\langle A \rangle = Z(\beta)^{-1} \mathrm{Tr} A \exp(-\beta H)
+\end{align*}
+S pomočjo Trotterjeve formule lahko izračunamo $\exp(-\beta H)$:
+\begin{align*}
+&\exp(-\beta(T+V)) \approx \left( \exp(-\beta V / M) \exp(- \beta T/M)\right)^M \\
+&\langle q | \exp(-\beta V) |q' \rangle = \delta(q-q') \exp(-\beta V(q)) \\
+&\langle q | \exp(-\beta T) |q' \rangle = G_0(q,q';\beta) = \left(\frac{1}{2 \pi \beta}\right)^{N/2} \exp(-\frac{1}{2\beta} (q-q')^2)
+\end{align*}
+Nato lahko particijsko funkcijo zapišemo s pomočjo identitete $\int \textup{d} q |q \rangle \langle q | = I$:
+\begin{align*}
+&Z(\beta) = \int \prod_{j=1}^M \textup{d}q_j e^{-\frac{\beta}{M} V(q_1)} G_0 \left(q_1,q_2;\frac{\beta}{M}\right) e^{-\frac{\beta}{M} V(q_2)} G_0 \left(q_2,q_3;\frac{\beta}{M}\right) \dots e^{-\frac{\beta}{M} V(q_M)} G_0 \left(q_M,q_1;\frac{\beta}{M} \right) = \\
+&= \left(\frac{1}{2\pi \beta}\right)^{MN/2}  \int \prod_{j=1}^M  \textup{d} q_j \exp (-E(q_1,q_2, \dots, q_M)) \\
+&E(q_1,q_2, \dots, q_M) = \sum_{j=1}^M \left( \frac{M}{\beta} (q_{j+1}-q_j)^2 + \frac{\beta}{M} V(q_j)\right)
+\end{align*}
+S pomočjo zgornjega lahko pričakovano vrednost opazljivk napišemo kot:
+\begin{align*}
+&\langle A \rangle = \int \prod_{j=1}^M \textup{d}q_j A_{q_1} P_{q_1,q_2} \dots P_{q_M, q_1} \\
+&P_{(q_1,q_2)} \propto \exp(-\frac{M}{\beta} (q_2-q_1)^2 - \frac{\beta}{M} V(q_1))
+\end{align*}
+S pomočjo Metropolisa lahko vzorčimo po porazdelitvi:
+\begin{equation*}
+P_{(q_1 \dots q_M)} = Z^{-1} P_{q_1,q_2} \dots P_{q_M, q_1}
+\end{equation*}
+
+Za potezo Metropolisovega algoritma lahko izberemo naključno izbrano časovno rezino $j$ med $1$ in $M$ in majhna sprememba vektorja $q_j \to q_j'$.
+Potezo potem sprejmemo z  verjetnostjo:
+\begin{equation*}
+P = \mathrm{min} \left(1, \frac{P_{q_{j-1}, q_j'} P_{q_j' q_{j+1}}}{P_{q_{j-1}, q_j} P_{q_j q_{j+1}}} \right)
+\end{equation*}
+
+Opazljivke, diagonalne v pozicijski bazi lahko potem enostavno izračunamo, nekatere nediagonalne pa lahko izračunamo iz particijske funkcije, na primer:
+\begin{equation*}
+\frac{\langle H \rangle}{N} = -(NZ)^{-1} \partial_\beta Z(\beta) = \langle \frac{M}{2\beta} - \frac{M}{2\beta^2 N} \sum_{j=1}^M (q_{j+1} - q_j)^2 + \frac{1}{MN} \sum_{j=1}^M V(q_j) \rangle
+\end{equation*}
+
+\section*{Enodimenzionalni oscilator}
+
+Za začetek obravnavajmo harmonski oscilator, torej:
+\begin{equation*}
+H = -\frac{1}{2} \partial_q + \frac{1}{2} q^2
+\end{equation*}
+
+Pri implementaciji algoritma bom za začetno konfiguracijo vzel $M$ naključno generiranih števil med $-1$ in $1$, razen ko bom imel že na voljo stacionarno konfiguracijo višje temperature (nižje $\beta$). V tem primeru bom vzel slednjo.
+
+Najprej se je treba odločiti za število časovnih rezin $M$ in "velikost" poteze $\epsilon$. Želimo, da v povprečju sprejmemo približno polovico potez.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti1.pdf}
+\end{subfigure}
+\caption*{Na sliki je prikazan delež sprejetih potez v odvisnosti od parametra $\epsilon$ in $\beta$ pri fiksnem število časovnih rezin $M$. Algoritem sem pognal za $n$ korakov brez kakršnekoli relaksacije. S črno črto je označen delež $0.5$, ki ga hočemo. Opazimo, da se z $\beta$  najprimerjenjši $\epsilon$ kar močno spreminja, in sicer narašča. }
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti3.pdf}
+\end{subfigure}
+\caption*{Na sliki je prikazan delež sprejetih potez v odvisnosti od parametra $\epsilon$ za več $M$. Opazimo, da je $\epsilon$ močno odvisen tudi od tega parametra. Funkcije, ki opisujejo to odvisnost so za majhne $M$ zelo različne, nekje nad $M=100$ pa gredo bolj skupaj. Obnašanje je podobno pri dvakrat večjem $\beta$. }
+\end{figure}
+
+Glede na zgornje rezultate, sem se odličil, da bom delal z $M=100$ (Funkcija postane že kar podobna višjim $M$), $\epsilon$ pa spreminjal v odvisnosti od $\beta$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti4.pdf}
+\end{subfigure}
+\caption*{Na sliki je odvisnost optimalnega $\epsilon$ od $\beta$, pridobljena z izračunom deleža sprejema pri 100 različnih $\epsilon$ med 0 in 1. Točke na sliki ustrezajo odmiku od optimalnega deleža sprejetja $0.5$ reda $10^{-3}$, najboljši fit pa sem poiskal s scipyjevim curvefit. }
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/avtokor.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/povp.pdf}
+\end{subfigure}
+\caption*{Na levi je na sliki  avtokorelacijska funkcija energije. Na x osi je zaporedno število izmerkov. Korelacija pade na minimum po okoli $2500$ izmerkih. Med povprečevanjem bom torej pazil, da pri vzorčenju vzorčim preko dovolj korakov (nekajkrat $2500$), da ne povprečujemo samo po močneje koreliranih konfiguracijah . Na desni je na sliki tekoče povprečje energije. Simulacijo sem najprej pognal za nek relaksacijski čas $n$ in še za naslednjih $10^6$ korakov. Od slednjih sem izračunal povprečje vsake $2500$-ega. Tekoče povprečje je na sliki. Opazimo, da relaksacijski čas ni zelo dolg, saj dobimo podobne rezultate ne glede na le-tega. Zaradi varnosti bom vseeno vzel $n=10^6$.}
+\end{figure}
+
+
+Sedaj lahko izračunamo energijo $\langle H \rangle$ iz particijske funkcije. Pričakovano vrednost potenciala $\langle V \rangle$ sem izračunal kar po povprečevanju $V(q_1)$ po izmerkih, saj je $V$ diagonalen v bazi $q$. Kinetično energjio potem izračunam kot razliko prejšnjih dveh (in ima posledično največjo napako).
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf1.pdf}
+\end{subfigure}
+\caption*{Na sliki je odvisnost energije (in posebej kinetičnega in potencialnega dela) od $\beta$. Kot vemo, mora za harmonski oscilator ta biti $0.5$ ko gre $\beta \to \infty$. Za izračun sem najprej metropolisov algoritem poganjal za $n=10^6$ (relaksacija) potem pa na naslednjih $10^6$ korakih vzel vsakega 50-ega in povprečil. Opazimo, da pri večjih $\beta$ kinetična in potencialna energija prispevata isto k celotni energiji, kar pri nižjih $\beta$ ni res. Za majhne $\beta$ je napaka kar velika}
+\end{figure}
+
+Poglejmo si še anharmonski oscilator:
+\begin{equation*}
+H = -\frac{1}{2} \partial_q + \frac{1}{2} q^2 + \lambda q^4
+\end{equation*}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti5.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/sprejeti6.pdf}
+\end{subfigure}
+\caption*{Ne levi sem preveril, če moramo pri izbiri $\epsilon$ paziti tudi na kakšno odvisnost od $\lambda$. Vidimo, da to ne bo potrebno. Na desni sem zaradi razlogov, ki bodo jasni na naslednjem grafu, pogledal kako je z odvisnostjo $\epsilon(\beta)$ za več $M$. Opazimo, da je funkcijska odvisnost zelo podobna razlika je v glavnem v predfaktorju. V nadaljevanju bom vzel predfaktor kar okoli $1.5$ kar se izkaže za dovolj dobro za vse $M$ na sliki.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf3.pdf}
+\end{subfigure}
+\caption*{Na sliki je odvisnost energije od $\lambda$. Z modro je prikazan rezultat, pridobljen z diagonalizacijo iz prvega poglavja (vstavljen $\beta=100$, velikost matrike je $500 \times 500$) z ostalimi barvami pa energije pri $\beta=100$ pridobljene z Metropolisovim algoritmom (ohlajanje začenši z $\beta=1$ in korako po $0.1$). Za vsak $\beta$ med ohlajanjem algoritem poženemo za $10^4$ korakov. Pri zadnjem beta pa povprečimo vsakega $50$-ega preko $10^7$ korakov. Ta števila korakov so pridobljena z nekaj preizkušanja. }
+\end{figure}
+
+Za manjše $\beta$ se veliki $M$ izkažejo za manj stabilne. Za občutek - tu je energija pri $\beta=5$ po $10^7$ korakih (brez povprečevanja):
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$M$ & $100$  & $200$  & $300$  & $400$  & $500$       & $600$              \\ \hline
+$E$ & $0.78$ & $0.83$ & $1.07$ & $0.33$ & $1.8 \cdot 10^{10}$ & $1.2 \cdot 10^{10}$ \\ \hline
+\end{tabular}
+\end{center}
+Za manjše $\beta$ se torej spet vrnimo k $M=100$, kar dovolj dobro deluje. Tako lahko spet narišemo podoben graf kot prej za $\lambda=0$:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf2.pdf}
+\end{subfigure}
+\caption*{Na sliki je odvisnost energije od $\beta$ za nekaj več $\lambda$. Obnašanje je podobno $\lambda=0$ le, da so energije nekoliko večje. Za izračun sem najprej $10^7$ korakov pustil za relaksacijo, potem pa po naslednjih $10^6$ povprečil (vzamemo  vsakega $50$-ega). Opazimo še, da so energije pri $\beta=20$ podobne tistim, pridobljenim pri $\beta=100$ z veliko večjim $M$, kar lahko služi kot še ena potrditev delovanja metode. }
+\end{figure}
+
+\end{document}
+
+\textup{d} za diferenciale
+\mathrm{det}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtopl.pdf}
+\end{subfigure}
+\caption*{Kot v primeru za Nose-Hoover sem tudi tu na podatke prilagodil linearno odvisnost.}
+\end{figure}

@@ -1,0 +1,1 @@
+Construction and testing of a symplectic integrator obtained from a Trotter-Suzuki decomposition.

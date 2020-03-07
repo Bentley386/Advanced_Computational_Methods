@@ -1,0 +1,227 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Problem elektronske strukture\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 13. 6. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Opis metode}
+V tej nalogi bomo s pomočjo DFT (Density Functional Theory) izračunali energijo osnovnega stanja helijevega atoma.
+Spomnimo se, da ima helijev atom dva elektrona, torej bo za opis dovolj ena orbitala (v kateri sta lahko elektrona z različnima spinoma).
+Izkaže se, da je prikladneje namesto z orbitalo $\phi_1(r)$ delati s funkcijo:
+\begin{equation*}
+u(r) = r \phi_1(r).
+\end{equation*}
+Elektronska gostota je seveda kvadrat valovne funkcije (in dvojka zaradi spina):
+\begin{equation*}
+\rho(r) = 2 \frac{u^2(r)}{r^2}.
+\end{equation*}
+Algoritem sestoji iz dveh delov. Prvi del je rešitev spodnje enačbe za energijo $E$ in funkcijo $u(r)$ pri znanem potencialu $V(r)$:
+\begin{equation*}
+\left( -\frac{1}{2} \frac{\textup{d}^2}{\textup{d}r^2} + V(r) \right) u(r) = \varepsilon u(r).
+\end{equation*}
+Zgornjo enačbo bom reševal s pomočjo metode Numerova, ki  deluje za enačbe tipa
+\begin{equation*}
+\left( \frac{\textup{d}^2}{\textup{d}r^2} + k^2(r) \right) u(r) = 0.
+\end{equation*}
+Če koordinato $r$ diskretiziramo na diskretne točke $r_i$ razmaknjene za $h$ se rešitev po metodi Numerova glasi
+\begin{equation*}
+\left(1 + \frac{h^2}{12} k_{i+1}^2 \right) u_{i+1} - 2 \left( 1 - \frac{5 h^2}{12} k_i^2 \right) u_i + \left( 1 + \frac{h^2}{12} k_{i-1}^2 \right) u_{i-1} = 0.
+\end{equation*}
+Za naš primer je $k^2(r) = -2V(r) + 2\varepsilon$. Iz zgornje enačbe, lahko iz vrednosti $u(r)$ pri dveh manjših $r_i$ izrazimo naslednjega, kar pomeni, da za začetni pogoj potrebujemo vrednost pri $r_0 = 0, r_1 = h$. Da valovna funkcija ne divergira moramo vzeti $u_0 = u(r_0)=0$ (Dejansko bo $r_0$ ustrezal $10^{-10}$ in ne čisto $0$, da se izognimo divergenci napakam pri deljenju z $r$). $u_1 = u(r_1)$ bom postavil na $0.1$, saj ta izbira ni važna, ker bomo tako ali tako po vsakem koraku valovno funkcijo normalizirali, da bo veljalo $\int_0^{r_{max}} \textup{d}r u^2(r) = 1$.
+S pomočjo bisekcije bom poiskal primeren $\varepsilon$, da bo veljalo $u(r_{max})=0$. Bisekcijo bom zacel na intervalu energij $[-20,0]$ in interval ožil, dokler ni krajši od $10^{-9}$.
+
+Drugi del algoritma nam pove, kako lahko iz znane valovne funkcije elektrona $u(r)$ dobimo Hartree- Fockov potencial $V_{HF}(r)$. Če definiramo $U(r)$ z zvezo $V_{HF}(r) = 2 U(r) / r$ opazimo, da $U(r)$ reši Poissonovo enačbo:
+\begin{equation*}
+\frac{\textup{d}^2}{\textup{d}r^2} U(r) = - \frac{u^2(r)}{r}
+\end{equation*}
+z robnimi pogoji $U(0) = 0$, $U(r_{max}) = 1$, pri nekem $r_{max}$. Reševanja zgornje enačbe se bom lotil kar z direktno integracijo in sicer s Simpsonovo metodo. Pogoj $U(r_{max})=1$ nadomestimo s pogojem $U'(r_0)=1$ in zgornjo enačbo dvakrat integriram, da dobimo $U(r)$.
+$U(r)$, ki ustreza pogoju $U(r_{max})$ potem dobimo s substitucijo $U(r) \to U(r) + k r$, kjer je $k=(1-U(r))/r_{max}$.
+
+Celotni potencial $V(r)$ potemdobimo s pomočjo LDA DFT sheme, kjer vzamemo
+\begin{align*}
+&V(r) = -\frac{2}{r} + V_{HF} (r) + V_{XC}(r), \\
+&V_{HF}(r) = \frac{2U(r)}{r}, \\
+&V_{XC}(r) = - \left( \frac{3 u^2(r)}{2 \pi^2 r^2} \right)^{1/3}
+\end{align*}
+Prvi člen v $V(r)$ predstavlja Coulombski privlak jedra, drugi člen povprečen elektrostatski potencial drugega elektrona, zadnji člen pa poskrbi za korelacije med elektronoma.
+
+Problema se sedaj lotimo iterativno: Začnemo z nekim približkom za $u(r)$ - recimo kar znano osnovno stanje vodikovega atoma in na vsakem koraku rešimo Poissonovo enačbo in s pomočjo LDA sheme dobimo $V(r)$ s katerim preko Schrodingerjeve enačbe dobimo nov približek za $u(r)$. Postopek ponavljamo dokler rešitev ne skonvergira.
+Ko skonvergira, lahko energijo osnovnega stanja Helijevega atoma izračunamo kot
+\begin{equation*}
+E = 2 \epsilon - \int_0^{r_{max}} \textup{d}r V_{HF} (r) u^2(r) - \frac{1}{2} \int_0^{r_{max}} \textup{d}r V_{XC}(r) u^2(r).
+\end{equation*}
+
+\section*{Naloga}
+Spodaj narisane grafe sem pridobil z v uvodu opisanem algoritmom. Relevantni parametri, ki sem jih algoritmu moral podati so naslednji:
+Maksimalni radij do katerega integriram je $r_{max}$, diskretizacija radija je $h$, algoritem pa neham poganjati, ko je razlika med zaporednima $u(r)$ manjsa od $\delta = 0.01$. Z razliko je tu misljena vsota absolutnih vrednosti razlik na $u(r)$ po vseh diskretiziranih točkah $r_i$. Za začetni približek sem vzel osnovno stanje vodikovega atoma $u(r) = 2re^{-r}$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/Psi1.pdf}
+\end{subfigure}
+\caption*{Graf prikazuje evolucijo funkcije $u(r)$ tekom algoritma. Opazimo, da grobo obliko rešitve zadanemo že po prvem koraku, po naslednjih korakih pa se počasneje spreminja proti rešitvi. Zgoraj definirana razlika rešitev med 16. in 17. korakom je manjša od $\delta$ zato po 17. koraku algoritem neham izvajati. Parametri: $r_{max}=10, h=0.001, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/U1.pdf}
+\end{subfigure}
+\caption*{Podobno zgornji graf prikazuje evolucijo funkcije $U(r)$ tekom algoritma. Prvi korak je tukaj $U(r)$ izračunan iz začetnega pogoja za $u(r)$ - osnovnega stanja vodikovega atoma. Podobno kot prej se pri naslednjih korakih počasi približujemo rešitvi. Parametri: $r_{max}=10, h=0.001, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/E1XD.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/EE1XD.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih opazimo še kako se izračunana energija spreminja tekom algoritma. Na levi je odvisnost energije od koraka $n$, na desni pa je narisana napaka glede na v navodilih napovedano vrednost $E=-2.72$. Opazimo, da energija nekako oscilira okoli prave vrednosti, vendar se zelo hitro (že nekje pri 5. koraku) ustali blizu vrednosti $E=-2.72$. Končna vrednost energije po koncu algoritma je $E=-2.721451549718081$. Parametri: $r_{max}=10, h=0.001, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/Konec.pdf}
+\end{subfigure}
+\caption*{Na grafu so prikazane funkcije $u(r)$, $U(r)$ in valovna funkcija $\psi(r)$ po koncu algoritma. Funkcija $\psi$ ni narisana v problematični točki $r=0$, kjer sem jo sicer dal na $0$.  Parametri: $r_{max}=10, h=0.001, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/Konec2.pdf}
+\end{subfigure}
+\caption*{Na grafu so prikazane funkcije $U(r)$, $V(r)$ po koncu algoritma. Potencial $V(r)$ pri $r \to 0$ močno naraste, kar je prikazano tudi na logaritemski skali na  desni.  Parametri: $r_{max}=10, h=0.001, \delta=0.01$.}
+\end{figure}
+
+V naslednjih grafih pogledamo odvisnost napake energije (glede na dano vrednost $E=-2.72$) od parametrov $h$,$r_{max}$ in $\delta$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/napake2.pdf}
+\end{subfigure}
+\caption*{Na grafu vidimo odvisnost napake energije $\Delta E$ v odvisnosti od parametra $\delta$, ki določa pri kakšni razliki zaporednih $u(r)$ nehamo poganjati algoritem. Opazimo, da je napaka zelo majhna že pri $\delta$ reda $1$ (Pri taksni diskretizaciji), kar je veliko več od prej uporabljenih $\delta=0.01$. Parametri: $r_{max}=10, h=0.001$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/napake3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/napake5.pdf}
+\end{subfigure}
+\caption*{Na grafu vidimo odvisnost napake energije $\Delta E$ v odvisnosti od parametra $h$, ki določa diskretizacijo koordinate $r$. Na levem grafu vidimo, da je napaka od $h$ veliko močneje odvisna kot od $\delta$. Torej je majhnost parametra $h$ za natačnost metode zelo pomemben. Na desnem grafu opazimo, da je za vrednosti $h$ okoli prej uporabljenega $h=0.001$ napaka energije zelo majhna . Parametri: $r_{max}=10, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{figures/napake4.pdf}
+\end{subfigure}
+\caption*{Na grafu vidimo odvisnost napake energije $\Delta E$ v odvisnosti od parametra $r_{max}$, ki določa do kakšnega $r$ integriramo. Pri premajhnih $r_{max}$ je napaka velika,  saj tam valovna funkcija še ne pride na ničlo, pri prevelikih pa napaka tudi naraste, ker je tam funkcija občutljivejša na streljanje. Optimalen $r_{max}$ je pri okoli $4.5$. Parametri: $h=0.001, \delta=0.01$.}
+\end{figure}
+
+Glede na zgornje grafe sem se odločil, da bom od zdaj naprej vzel $r_{max}=4.5$, $h=0.001$, $\delta = 0.01$. 
+Kot zanimivost sem pogledal še kako algoritem konvergira pri manj posrečeno izbranih začetnih približkih za $u(r)$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol1XD.pdf}
+\end{subfigure}
+\caption*{Na zgornjem grafu začnemo algoritem z funkcijo $u(r) = 1 - e^{-r}$, ki sploh ni normalizirana. Vidimo, da vseenno že po prvem koraku  funkcija močno spremeni obliko in postane podobna rešitvi. Tudi energija hitro konvergira k $-2.72$. Parametri: $h=0.001, r_{max}=4.5, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol2XD.pdf}
+\end{subfigure}
+\caption*{Podobno opazimo, če začnemo algoritem z funkcijo $u(r) = \sin(r)$. Konvergenca je kljub slabo izbrani začetni funkciji zelo hitra. Izgleda, da metoda ni tako občutljivo na napačno izbran začetni približek. Parametri: $h=0.001, r_{max}=4.5, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/evol3XD.pdf}
+\end{subfigure}
+\caption*{Za konec sem pogledal še primer, ko začnemo z močno oscilajočo funkcijo $u(r) = \sin^2 (3r)$. Tudi tu je konvergenca vseeno hitra. Parametri: $h=0.001, r_{max}=4.5, \delta=0.01$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/zadnje.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{figures/zadnje2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih je $U(r)$ pridobljen z različnimi začetnimi približki. Opazimo, da so si $U(r)$ pridobljeni z različnimi $u(r)$ dokaj podobni, kar razloći prejšnjo hitro konverenco tudi za zelo napačne začetne približke $u(r)$. Točnega razloga za to nisem odkril, mogoče je povezano s tem, da imamo na desni strani Poissonove enačbe v vsakem primeru gostoto podobne oblike - $1/r$ pomnoženo z neko funkcijo. Na desnem grafu vidimo, da smo po drugi iteraciji v vsakem primeru praktično zadeli pravi $U(r)$. $h=0.001, r_{max}=4.5, \delta=0.01$.}
+\end{figure}
+
+\end{document}
+
+
+
+
+\textup{d} za diferenciale
+\mathrm{det}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtopl.pdf}
+\end{subfigure}
+\caption*{Kot v primeru za Nose-Hoover sem tudi tu na podatke prilagodil linearno odvisnost.}
+\end{figure}

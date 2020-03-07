@@ -1,0 +1,294 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Molekularna Dinamika\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 11. 4. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Osnovni termostati}
+
+Radi bi opisali dinamiko delcev, ki so sklopljeni z nekakšnim toplotnim rezervoarjem oziroma termostatom. Najprej bomo raziskali tako imenovani  Nosé-Hooverjev termostat, ki je determinističen. Recimo, da ima Hamiltonjan našega sistema naslednjo kanonično obliko:
+\begin{equation*}
+H = \sum_{j=1}^N \frac{p_j^2}{2 m_j} + V(q).
+\end{equation*}
+Hamiltonove enačbe gibanja v prisotnosti Nosé-Hooverjevega termostata modificiramo na naslednji način:
+\begin{align*}
+&\frac{\textup{d} q_j}{\textup{d}t} = \frac{p_j}{m_j}, \\
+&\frac{\textup{d}p_j}{\textup{d}t} = - \frac{\partial V(q)}{\partial q_j}  - \zeta p_j, \\
+&\frac{\textup{d} \zeta}{\textup{d}t} = \frac{1}{\tau} \left( \sum_{j=1}^N \frac{p_j^2}{m_j} - N T \right).
+\end{align*}
+$T$ predstavlja temperaturo teromastata, $\zeta$ pa dušenje oziroma ojačanje (odvisno od trenutne kinetične energije sistema). Tako zagotovimo ekviparticijski izrek v limiti dolgih časov. $\tau$ predstavlja nek končni časovni odziv sistema.
+Tako pridobljene enačbe niso več Hamiltonske in jih torej ne moremo reševati s simplektičnimi integratorji. Za reševanje bomo uporabljali metodo Runge Kutta 4.
+
+Ko rešitev imamo lahko izračunamo temperaturo ter toplotni tok na naslednji način:
+\begin{align*}
+&T_j = p_j^2 \\
+&J_j = -\frac{1}{2} \left( V' (q_j - q_{j-1}) + V'(q_{j+1}-q_j) \right) p_j
+\end{align*} 
+
+Uporabljali bomo še eno vrsto termostata in sicer Maxwellovo kopel, ki je stohastični termostat.
+Spet imamo Hamiltonjan kanonične oblike:
+\begin{equation*}
+H = \sum_{j=1}^N \frac{p_j^2}{2 m_j} + V(q).
+\end{equation*}
+Tokrat postopamo na naslednji način: Hamiltonove enačbe propagiramo do nekega izbranega časa $\tau$ (najbolje s simplektičnim integratorjem). Po času $\tau$ simuliramo termostat s tem, da gibalne količine na novo žrebamo po normalni porazdelitvi z povprečjem $\mu=0$ in varianco $\sigma^2 = m_k T_k$. Potem spet enačbe propagiramo za čas $\tau$, kjer gibalne količine ponovno žrebamo in tako dalje.
+
+\section*{Anharmonična atomska veriga}
+
+Obravnavamo sistem sklopljenih kvartičnih oscilatorjev v eni dimenziji, ki ga opiše Hamiltonjanom:
+\begin{equation*}
+H = \frac{1}{2} \sum_{j=1}^N p_j^2 + \sum_{j=1}^N\left( \frac{q_j^2}{2} + \lambda q_j^4  \right) + \frac{1}{2} \sum_{j=1}^{N-1} (q_{j+1} - q_j)^2  
+\end{equation*}
+Pripadajoče enačbe gibanja, če z rezervoarjema sklopima skrajno levi in desni oscilator so:
+\begin{align*}
+&\frac{\textup{d} q_j}{\textup{d}t} = p_j, \\
+&\frac{\textup{d}p_j}{\textup{d}t} = - q_j - 4 \lambda q_j^3 +  (q_{j+1}-2 q_j+ q_{j-1}) (1-\delta_{j,1}-\delta_{j,N})  + \delta_{j,1} (q_2-q_1 -\zeta_1 p_1) + \delta_{j,N} (-q_N + q_{N-1} - \zeta_2 p_N), \\
+&\frac{\textup{d} \zeta_1}{\textup{d}t} = \frac{1}{\tau} \left(  p_1^2 -  T_L \right), \\
+&\frac{\textup{d} \zeta_2}{\textup{d}t} = \frac{1}{\tau} \left(  p_N^2 -  T_R \right).
+\end{align*}
+Tekom naloge bo veljalo $T_L = 3, T_R = 1$.
+Zanimata nas tok in temperatura takšnega sistema oscilatorjev med rezervoarjema. Tega se bomo lotili z numeričnem reševanjem zgornjega sistema z naključno izbranim začetnim pogojem. Preden začnemo računati želene količine, moramo za nek relaksacijski čas $t_r$ čakati, da sistem preide v stacionarno stanje. Potem lahko računamo razne količine, katere moramo povprečevali po času $t_a$.
+Za primer harmonskega oscilatorja, torej $\lambda=0$ pričakujemo konstantni temperaturni profil, za anharmonskega pa linearno odvisnost temperature. S pomočjo tega se bomo odločili, kakšna časa relaksacije in povprečevanja moramo vzeti.
+
+Za začetek si poglejmo, kakšen čas povprečenja $t_a$ moramo vzeti. Na spodnjih slikah je prikazan temperaturni profil za več različnih časov povprečenja, po fiksnem, dolgem relaksacijskem času $t_r=1000000$:
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/povp1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/povp2.pdf}
+\end{subfigure}
+\caption*{Odvisnost temperaturnega profila od časa povprečevanja $t_a$ pri fiksnem relaksacijskem času $t_r$. Opazimo, da pri obeh skrajnih $\lambda$, ki ju bomo obdelovali zadošča čas povprečenja 100000. Ostali parametri so: $\tau=1$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/rel1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/rel2.pdf}
+\end{subfigure}
+\caption*{Odvisnost temperaturnega profila od časa relaksacije $t_r$ pri fiksnem času povprečevanja $t_a=100000$. Opazimo, da pri obeh $\lambda$ čas relaksacije ne vpliva bistveno na rezultat in dobimo zadovoljiv profil že pri zelo majhnih. Ostali parametri so: $\tau=1$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/tau.pdf}
+\end{subfigure}
+\caption*{Primeren parameter $\tau$ pridobimo s pogojem, da je pri $\lambda=0$ temperatura povsod enaka povprečju temperatur rezervoarjev. V našem primeru je to $2$, saj imamo $T_L=3, T_R=1$. Ostali parametri so: $t_a=1000000, t_r=1000000$}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb2.pdf}
+\end{subfigure}
+\caption*{Temperaturni profil pri več kombinacijah parametrov $\lambda$ in $N$. Pri $\lambda=0$ je profil (razen na robovih) konstanten kot pričakujemo, pri neničelnem $\lambda$ pa je grobo linearen s tem da je temperatura obratno sorazmerna z $\lambda$, kar je tudi smiselno . Ostali parametri so: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb7.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb5.pdf}
+\end{subfigure}
+\caption*{Temperaturni profil pri več kombinacijah parametrov $\lambda$ in $N$. Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb2.pdf}
+\end{subfigure}
+\caption*{Temperaturni profil pri več kombinacijah parametrov $\lambda$ in $N$. Pri $\lambda=0$ je profil (razen na robovih) konstanten kot pričakujemo, pri neničelnem $\lambda$ pa je grobo linearen s tem da je temperatura obratno sorazmerna z $\lambda$, kar je tudi smiselno. Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/vecN1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/vecN2.pdf}
+\end{subfigure}
+\caption*{Temperaturni profil pri več kombinacijah parametrov $\lambda$ in $N$. Za $\lambda=0$ dobimo spet konstantne temperaturne profile (razen na robovih). Za $\lambda \neq 0$ dobimo neko linearno odvisnost profila. Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+Tok med mestoma $j$ in $j+1$ se v našem primeru izračuna kot:
+\begin{equation*}
+J_j = -\frac{1}{2} \left( q_{j+1} - q_{j-1} \right) p_j
+\end{equation*}
+Na naslednjih nekaj grafih si poglejmo še obnašanje toka.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/veclamb4.pdf}
+\end{subfigure}
+\caption*{Krajevna odvisnost toka pri več kombinacijah parametrov $\lambda$ in $N$. Tok je praktično konstanten, kar je v redu saj gledamo stacionarno stanje . Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/vecN3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/vecN4.pdf}
+\end{subfigure}
+\caption*{Krajevna odvisnost toka pri več kombinacijah parametrov $\lambda$ in $N$. Na desni vidimo, da imamo vseeno neke manjše napake, saj tok ni čisto konstanten, vendar če pogledamo skalo, vidimo, da so te spremembe zelo majhne. Lahko torej rečemo, da je tok spet praktično konstanten, kar je v redu saj gledamo stacionarno stanje. Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+
+Poglejmo si odvisnost toplotnega toka od razdalje med rezervoarjema $N$. Za primer $\lambda=0$ pričakujemo $J(N) = K$ za neko konstantno K, za neničelen $\lambda$ pa $J = \kappa (T_1-T_2)/N$ za neko konstanto $\kappa$. Na pridobljene rezultate bom te funkcije fittal s pomočjo scipy-jeve curvefit.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/fit2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/fit1.pdf}
+\end{subfigure}
+\caption*{Poleg simulirane odvisnosti $J(N)$ s polno črto, je prikazan še fit s črtkano. Na grafu so napisane tudi pripadajoče funkcije, po katerih sem fittal. Na desni je bilo treba v model dodati aditivno konstanto, sicer je predlagan fit čisto zgrešil. Razlog za potrebo po aditivni konstanti morda tiči v tem, da v našem modelu tako ali tako že temperaturni profil ni čisto po pričakovanjih - ni čisto linearen. Zato ni presenetljivo, da ima tudi tok nek dodatek.  Na zgornjih grafih sem toplotni tok povprečeval po $j$. Parametri: $\tau=0.5, t_a=1000000, t_r=1000000$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.6\textwidth}
+\includegraphics[width=\linewidth]{Figures/topl.pdf}
+\end{subfigure}
+\caption*{Odvisnost sorazmernostne konstante $\kappa$ od parametra $\lambda$. Za fittanje sem uporabil zgornje vrednosti in še vrednost pri $\lambda=0.1$. Opazimo, da $\kappa$ z $\lambda$ pada, kar je smiselno, saj smo tudi na ostalih grafih videli, da je tok manjši pri večjih $\lambda$. Natančna funkcijska odvisnost prevodnosti pa ni čisto jasna. Na tem intervalu sem jo poizkusil aproksimirati kar z linearno funkcijo, kar je dalo prikazan rezultat.}
+\end{figure}
+
+Poglejmo si še Maxwellovo kopel.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.6\textwidth}
+\includegraphics[width=\linewidth]{Figures/porazd.pdf}
+\end{subfigure}
+\caption*{Za lažjo predstavo so tu narisane porazdelitvene funkcije gibalnih količin na posameznem rezervoarju. Spomnimo, da imamo $T_L=3, T_R=1$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxpovp.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxrel.pdf}
+\end{subfigure}
+\caption*{Po istem receptu kot za Nose-Hoover sem tudi tu na hitro preveril kakšna morata biti relaksacijski in povprečevalni čas. Zaključki so isti kot pri Nose-Hooverju.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtau1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtau2.pdf}
+\end{subfigure}
+\caption*{Tukaj spet preverjamo, kakšen $\tau$ je smiselno vzeti. Tokrat je temperaturni profil pri več $\tau$ zelo podoben in enak povprečni temperaturi rezervoarjev, zato samo iz tega grafa ne moremo kar takoj sklepati kateri $\tau$ je najprimernejši. Zato poglejmo na desni raje odvisnost toplotnega toka od $\tau$, saj vemo, da bo ta pri primernem $\tau$ največji. Iz tega sklepamo, da bo primeren $\tau$ enak 2.5 . Parametri: $ t_a=1000000, t_r=1000000$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/lepa2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/lepa.pdf}
+\end{subfigure}
+\caption*{Še en prikaz profila za več $\lambda$ pri fiksnem N. Z barvo je označena temperatura, robna oscilatorja pa sta dodana kar v termostat. Tu se zelo lepo vidi, kako je pri $\lambda=0$ profil konstanten, pri neničelnem pa bolj enakomerno pada. $\tau$ enak 2.5 . Parametri: $ t_a=100000, t_r=10000$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/lepa3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/lepa4.pdf}
+\end{subfigure}
+\caption*{Še nekaj profilov. Zaradi preglednosti je narisan samo en tok, ki je seveda enak za vse oscilatorje. Tukaj se lepo vidi večji skok pri robu in oscilacije pri konstantnem $\lambda=0$ profilu. $\tau$ enak 2.5 . Parametri: $ t_a=100000, t_r=10000$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxprofil2.pdf}
+\end{subfigure}
+\caption*{Temperaturni profil pri Maxwellovem termostatu manj fluktuira kot pri Nose-Hooverjevem. Slabša stran pa je, da na robu ne pride čisto do temperature 3, ampak malo manj. Parametri: $ \tau=2.5, t_a=1000000, t_r=1000000$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxfit2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxfit.pdf}
+\end{subfigure}
+\caption*{Prikazana je odvisnost $J(N)$. Pri $\lambda=0$ odvisnost kar močno fluktuira okoli neke vrednosti, kar je verjetno posledica manjšega časa povprečevanja in relaksacije. Za neničelne $\lambda$ dobimo podobne oblike funkcij kot prej, le da so tokovi tu veliko večji in posledično tudi sorazmernostni koeficienti $\kappa$. Parametri: $\tau=2.5 t_a=100000, t_r=50000$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtopl.pdf}
+\end{subfigure}
+\caption*{Kot v primeru za Nose-Hoover sem tudi tu na podatke prilagodil linearno odvisnost.}
+\end{figure}
+
+\end{document}
+
+

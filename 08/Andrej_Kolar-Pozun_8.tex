@@ -1,0 +1,192 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Matrično produktni nastavki\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 15. 5. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Uvod}
+
+V tem poglavju se bomo seznanili z matrično produktnimi nastavki (MPA), ki so še posebej priročni za enodimenzionalne probleme.
+Recimo, da nam mnogodelčno stanje $| \psi \rangle$ predstavlja stanje za $n$ $d$-nivojskih sistemov (od tu naprej obravnavamo primer spina $1/2$, kjer je to kar dvonivojski sistem). Vsako tako stanje lahko razvijemo po bazi:
+\begin{equation*}
+|\psi \rangle = \sum_{s_1 \dots s_n} \psi_{s_1 \dots s_n} |s_1 \dots s_n \rangle.
+\end{equation*}
+
+Izkaže se, da lahko koeficiente zgornjega razvoja izrazimo kot MPA:
+\begin{equation*}
+\psi_{s_1 , s_2, \dots , s_n} = A_{s_1}^{(1)} A_{s_2}^{(2)} \dots A_{s_n}^{(n)}.
+\end{equation*}
+Problem smo tako prevedli na iskanje primernih matrik $A_{s_i}^{(j)}$.
+Matrike lahko s pomočjo SVD razcepa dobimo po naslednjem algoritmu:
+\begin{itemize}
+\item Vektor koeficientov razvoja preoblikujemo v matriko dimenzije $2 \times 2^{N-1}$ in naredimo SVD razcep:
+\begin{equation*}
+\psi_{s_1, (s_2 \dots s_n)} = \sum_{k_1} U_{s_1, k_1}^{(1)} \lambda_{k_1}^{(1)} V_{k_1, (s_2 \dots s_n)}^{(1) \dagger}
+\end{equation*}
+Definiramo:
+\begin{align*}
+&(A_{s_1}^{(1)})_{k_1} = U_{s_1, k_1}^{(1)} \\
+&\psi_{k_1, s_2 \dots s_n}^{(2)} = \lambda_{k_1}^{(1)} V_{k_1, (s_2 \dots s_n)}^{(1) \dagger}
+\end{align*}
+
+\item V drugem koraku naredimo SVD nove matrike:
+\begin{align*}
+&\psi_{(k_1, s_2), (s_3 \dots s_n)}^{(2)} = \sum_{k_2} U_{(k_1, s_2),k_2}^{(2)} \lambda_{k_2}^{(2)} V_{k_2, (s_3 \dots s_n)}^{(2) \dagger} \\
+&(A_{s_2}^{(2)})_{k_1,k_2} = U_{(k_1,s_2),k_2}^{(2)} \\
+&\psi_{k_2, s_3, \dots s_n}^{(3)} = \lambda_{k_2}^{(2)} V_{k_2, (s_3 \dots s_n)}^{(2) \dagger}
+\end{align*}
+
+\item Splošno v naslednjih korakih:
+\begin{align*}
+&\psi_{(k_{j-1}, s_j), (s_{j+1} \dots s_n)}^{(j)} = \sum_{k_j} U_{(k_{j-1}, s_j),k_j}^{(j)} \lambda_{k_j}^{(j)} V_{k_j, (s_{j+1} \dots s_n)}^{(j) \dagger} \\
+&(A_{s_j}^{(j)})_{k_{j-1},k_j} = U_{(k_{j-1},s_j),k_j}^{(j)} \\
+&\psi_{k_j, s_{j+1}, \dots s_n}^{(j+1)} = \lambda_{k_j}^{(j)} V_{k_j, (s_{j+1} \dots s_n)}^{(j) \dagger}
+\end{align*}
+
+\item Na koncu definiramo še:
+\begin{equation*}
+(A_{s_n}^{(n)})_{k_{n-1}} = \psi_{k_{n-1},s_n}^{(n)}
+\end{equation*}
+\end{itemize}
+
+\section*{Naloga}
+
+Za začetek preverimo metodo na naslednji način. Vzamimo naključno generirano stanje $n$ spinov. Koeficienti razvoja so porazdeljeni po $N(0,1)$ in še normirani.
+Iz stanja pridobimo matrike $A$ po zgornjem algoritmu. S pomočjo le-teh rekonstruiramo koeficiente razvoja in jih primerjamo z stanjem, s katerim smo začeli:
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{rekonstrukcija.pdf}
+\end{subfigure}
+\caption*{Na $x$ osi je velikost verige $n$, na $y$ osi pa absolutna napaka koeficientov, ki jih dobimo po rekonstrukciji z matrikami $A$. Opazimo, da je napaka praktično nič. Naraščanje napake z $n$ je posledica dejstva, da stevilo koeficientov za opis stanja narašča eksponentno z $n$ (absolutna napaka ni normirana)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{zadnja.pdf}
+\end{subfigure}
+\caption*{Na sliki je vrednost $\sum_k |\lambda_k^{(j)}|^2$ za set lambd na vsakem koraku $j$. Moralo bi veljati, da je to enako normi valovne funkcije, kar je res (saj je ta normirana).}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{matrike.png}
+\end{subfigure}
+\caption*{Za primer $n=14$ so na sliki prikazane matrike $A$, s tem, da je na skrajni levi $A^{(1)}$ na skrajni desni pa $A^{(n)}$. Velikosti matrik najprej naraščajo, na $n/2$ pa se obrnejo in potem manjšajo, kot smo pričakovali}
+\end{figure}
+
+
+V nadaljevanju bomo verigo razdeliil na dve komponenti neke biparticije in računali entropijo prepletenosti med njima.
+Za particijo, kjer je prvih $j$ spinov v komponenti $A$, ostali pa v $B$ entropijo znamo izračunati:
+\begin{equation*}
+S=- \sum_k |\lambda_k^{(j)}|^2 \log |\lambda_k^{(j)}|^2,
+\end{equation*}
+kjer so $\lambda_k^{(j)}$ Schmidtovi koeficienti, pridobljeni v j-tem koraku algoritma.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija1.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od dolžine verige $n$ za primer simetrične biparticije (prva polovica spinov je v $A$ , druga v $B$). Začnemo z osnovnim stanjem Heisenbergovega modela s periodičnimi oziroma odprtimi robni pogoji. Opazimo monotono naraščanje v primeru periodičnih robnih pogojev in nekakšne oscilacije v primeru odprtih.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija4.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od dolžine verige $n$ za primerbiparticije, kjer v $A$ komponento damo prva dva spina, ostale pa v $B$. Začnemo z osnovnim stanjem Heisenbergovega modela s periodičnimi oziroma odprtimi robni pogoji. Entropija sedaj počasneje narašča. Razlika v entropiji za PBC oziroma OBC pa je zelo velika.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija2.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od velikosti particije $A$ $k$ za več dolžine verige $n$ za primer particije, ko so vsi spini v $A$ na levi strani verige, $B$ pa na desni. Začnemo z osnovnim stanjem Heisenbergovega modela s periodičnimi robnimi pogoji. Opazimo, da je entropija maksimalna pri simetrični biparticiji.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija3.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od velikosti particije $A$ $k$ za več dolžine verige $n$ za primer particije, ko so vsi spini v $A$ na levi strani verige, $B$ pa na desni. Začnemo z osnovnim stanjem Heisenbergovega modela z odprtimi robnimi pogoji. Spet opazimo, nekakšne oscilacije v entropiji.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija5.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od $n$ za primer alternirajoče biparticije (torej $ABAB\dots$). Začnemo z osnovnim stanjem Heisenbergovega modela. Naraščanje entropije z $n$ je kar linearno, razlika med odprtimi in periodičnimi robnimi pogoji pa je konstanten offset. V tem primeru entropije ne moramo izračunati iz navadnega algoritma, ampak moramo Schmidtove koeficiente izračunati iz enega samega SVD-ja primerno preoblikovane matrike.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija7.pdf}
+\end{subfigure}
+\caption*{Na sliki je entropija prepletenosti v odvisnosti od $n$ za primer biparticije AABBAA... Začnemo z osnovnim stanjem Heisenbergovega modela. Naraščanje entropije z $n$ je spet linearno, razlika med odprtimi in periodičnimi robnimi pogoji pa je konstanten offset. V tem primeru entropije ne moramo izračunati iz navadnega algoritma, ampak moramo Schmidtove koeficiente izračunati iz enega samega SVD-ja primerno preoblikovane matrike.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{entropija6.pdf}
+\end{subfigure}
+\caption*{Za konec sem se spet vrnil k naključno izbranem (Gaussovsko porazdeljeni koeficienti) stanju in pogledal entropijo za nekaj biparticij. Stanje za vsak $n$ je neodvisno žrebano. Opazimo, da so entropije pri vseh particijah približno enake.}
+\end{figure}
+
+\end{document}
+
+\textup{d} za diferenciale
+\mathrm{det}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtopl.pdf}
+\end{subfigure}
+\caption*{Kot v primeru za Nose-Hoover sem tudi tu na podatke prilagodil linearno odvisnost.}
+\end{figure}

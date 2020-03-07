@@ -1,0 +1,1 @@
+Calculation of entanglement entropy of certain states with Schmidt decomposition and MPA.

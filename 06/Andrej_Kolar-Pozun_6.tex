@@ -1,0 +1,318 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Klasični Monte Carlo\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 18. 4. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+\section*{Metropolisov algoritem}
+
+Kot vemo lahko pričakovane vrednosti opazljivk, porazdeljenih po gostoti verjetnosti $\rho(x)$ enostavno izračunamo s pomočjo Monte Carlo integracije:
+\begin{equation*}
+\langle A \rangle = \int \rho(x) a(x) \textup{d}^N x \approx \frac{1}{M} \sum_{j=1}^M a(x_j),
+\end{equation*}
+kjer točke $x_j$ na desni strani enačbe vzorčimo po porazdelitvi $\rho$.
+V statistični fiziki želimo pogosto vzorčiti po Boltzmannovi porazdelitvi torej $\rho(x) = Z^{-1} e^{-\beta E(x)}$, kjer je $x$ točka v faznem prostoru. Dimenzija faznega prostora je ponavadi zelo velika in pojavi se problem, kako učinkovito vzorčiti po željeni porazdeliitvi. Tu nastopi tako imenovani Metropolisov algoritem.
+
+Ideja algoritma je konstrukcija markovske verige, katere poteze (koraki) so lahko izvedljivi in katere stacionarna porazdelitev ustreza željeni porazdelitvi $\rho$. Tako verigo konstruiramo na naslednji način:
+\begin{itemize}
+\item Začnemo z poljubnim stanjem $x_0$ npr. naključno generiranim.
+\item Naredimo neko (lokalno) potezo in sicer z izbrano verjetnostjo $p(x \to x')$ naredimo potezo ki stanje $x$ nadomesti z stanjem $x'$. Za $p$ lahko izberemo npr. enakomerno porazdelitev, ki vse poteze naredi z enako verjetnostjo.
+\item Izračunamo razliko energij med staro in novo konfiguracijo $\Delta E = E[x']-E[x]$ (tukaj že privzamemo, da želimo Boltzmannovo porazdelitev).
+\item Novo stanje $x'$ sprejmemo z verjetnostjo $A(x \to x') = \mathrm{min} \left(1, \frac{\rho(x') p(x' \to x)}{\rho(x) p(x \to x')} \right) = \mathrm{min} \left(1, e^{-\beta (E(x')-E(x))}\right)$, sicer ostanemo v starem stanju.
+\end{itemize}
+
+Najprej algoritem poganjamo in ne vzorčimo, da veriga preide v stacionarno stanje, potem lahko začnemo vzorčiti. Paziti moramo, da ne vzorčimo preveč pogosto, saj so zaporedna stanja v verigi korelirana.
+
+Pri modelski analizi smo na ta način obdelali Isingov model, tu pa bomo obravnavali Heisenbergov model:
+\begin{equation*}
+E(x) = - \sum_{j=1}^N (J \vec{\sigma}_j \cdot \vec{\sigma}_{j+1} - h \sigma_j^z).
+\end{equation*}
+Pripadajoče razlika energije je:
+\begin{equation*}
+\Delta E = \Delta\vec{\sigma}_j \cdot (-J \vec{\sigma}_{j+1} - J \vec{\sigma}_{j-1} + h (0,0,1)), \Delta \vec{\sigma}_j = \vec{\sigma}_j' - \vec{\sigma}_j
+\end{equation*}
+
+Povprečevanje bo vzrocu, katerega nam da Metropolisov algoritem nam torej, da približek za pričakovano vrednost neke spremenljivke a.
+Napaka takega približka pa se lahko izračuna na naslednji način:
+\begin{equation*}
+\epsilon = \frac{1}{\sqrt{M}} \sqrt{\left( \frac{1}{M} \sum_{j=1}^M a(x_j)^2 \right) - \left( \frac{1}{M} \sum_{j=1}^M a(x_j) \right)^2}
+\end{equation*}
+
+\section*{Heisenbergova veriga}
+
+Obravnavamo dobro znano Heisenbergovo verigo s feromagnetno sklopitvijo, katere lastnosti bomo računali po postopku, omenjenem v uvodu.
+
+Za začetek naš algoritem preverimo na znanem primeru: Računamo energijo 10-členske verige, kjer postavimo $h$ oziroma $J$ na nič. Vemo, da se v tem primeru v osnovnem stanju vsi spini obrnejo v isto smer in znamo izračunati energijo:
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/energija.pdf}
+\end{subfigure}
+\caption*{Izračun energije osnovnega stanja za robna primera, za katera vemo rešitev ($E=-10$). Graf pokaže, da naš algoritem deluje pravilno. Tekom algoritma smo sistem ohlajali, torej $\beta$ postopoma zviševali. Na vsakem koraku smo se zvišali za $\delta \beta = 0.01$, skupno smo torej naredili $100000$ korakov.}
+\end{figure}
+Naslednje vprašanje je, koliko časa tipično naša markovska veriga potrebuje, da preide v svoje stacionarno stanje, ki predstavlja porazdelitev po kateri želimo žrebati. Hkrati nas zanima še, kako pogosto lahko žrebamo iz te porazdelitve, da podatki niso še korelirani. To bom raziskal na naslednjih grafih:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/avtokor.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/avtokor2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih najprej pustimo sistem $10^6$ korakov, da relaksira, potem pa začnemo zaporedoma vzorčiti in računati energije. Na $x$ osi je prikazan "čas" (v enotah korakov algoritma). S pomočjo Fourierove transformacije nato izračunamo avtokorelacijo in jo normiramo. Ugotovimo, da so izmerki zelo hitro nekorelirani. Ostali parametri so: $J=h=1$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/povp.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/povp2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih najprej pustimo sistem relaksirati za različna števila korakov $n$. Potem vzorčimo in računamo energijo, na grafu pa je narisano tekoče povprečje teh energij. Vidimo, da je to skoraj enako ne glede na čas relaksacije. Markovska veriga torej zelo hitro preide v stacionarno stanje. Ostali parametri so: $J=h=1$}
+\end{figure}
+
+Poglejmo si zdaj pobliže energijo in magnetizacijo ter njuni napaki. Poleg tega, bom gledal še magnetno suscepibilnost in toplotno kapaciteto definirani kot
+\begin{align*}
+&\chi = \beta ( \langle M_z^2 \rangle - \langle M_z \rangle ^2) \\
+&C_V = \beta^2 (\langle E^2 \rangle - \langle E \rangle ^2) \\
+&E = -J \sum_{j=1}^N \sigma_j \cdot \sigma_{j+1} + h \sum_{j=1}^N \sigma_j \cdot e_z \\
+&M = \frac{1}{N} \sum_{j=1}^N \sigma_j 
+\end{align*}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Na levi sem med izmerki čakal $t_a=50$ korakov  in naredil $n =10^5$ meritev. Na levi sem za primerjavo med meritvami čakal $t_a = 10^5$ a jih naredil le $n=100$. Na relaksacijo sem v vseh primerov čakal $10^6$ korakov. Grobo izgleda, da dobimo enak rezultat, vendar ta v primeru na levi, ko vzorčimo pogosteje manj fluktuira in bom od tu naprej vzel te parametre. Napake so v obeh primerih zelo majhne. Ostali parametri so $N=10, J=1, h=0$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf33.pdf}
+\end{subfigure}
+\caption*{Razne količine za večjo verigo $N=100$ in $J=1, h=0$.  Podobno kot prej energija seveda pade do $-N$, toplotna kapaciteta naraste na približno $N$, magnetizacija pa je praktično $0$. Z $M$ je na sliki označena absolutna vrednost celotne magnetizacije, z $M_z$ pa vrednost magnetizacije v z smeri. Susceptibilnost linearno narašča. Ostali parametri so $t_r = 10^6, t_a = 50, n=10^5$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf44.pdf}
+\end{subfigure}
+\caption*{Razne količine za večjo verigo $N=100$ in $J=0, h=1$.  Odvisnost energije in toplotne kapacitete je takšna kot prej, magnetizacija v z smeri (torej smeri polja) pa tokrat pada do vrednosti $-1$, velikost celotne magnetizacije pa seveda proti $+1$. Susceptibilnost sprva narašča, doseže nek maksimum potem pa začne padati. Ostali parametri so $t_r = 10^6, t_a = 50, n=10^5$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf5.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf55.pdf}
+\end{subfigure}
+\caption*{Razne količine za večjo verigo $N=100$ in $J=0, h=1$.  Situacija je zelo podobna prejšnjem grafu, spini se spet uredijo v nasprotni smeri magnetnega polja. Razlika je le v te, da energija seveda pada proti $-200$ saj je tem primeru to energija osnovnega stanja. Susceptibilnost pa malce prej doseže maksimum. Ostali parametri so $t_r = 10^6, t_a = 50, n=10^5$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf6.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/graf66.pdf}
+\end{subfigure}
+\caption*{Odvisnost raznih količin od razmerja $J$ pri fiksni temperaturi in $h$. Energija seveda z večjim $J$ pada, medtem ko ostaja kapaciteta približno ista. Magnetizacija in susceptibilnost z večanjem $h$ hitreje prideta do končnih vrednosti.  Ostali parametri so $t_r = 10^6, t_a = 50, n=10^5$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/beta1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/beta2.pdf}
+\end{subfigure}
+\caption*{Susceptibilnost in toplotna kapaciteta v odvisnosti od $\beta$. Odvisnost susceptibilnosti je praktično enaka ne glede na $N$, za toplotno kapaciteto pa spet vidimo, da ta z $N$ narašča. Na grafu se vidi, da je tudi bolj zašumljena, vendar sem pri risanju tega povprečeval po manj časih, saj me je zanimalo samo bistveno obnašanje. Ostali parametri so $t_r = 10^6, t_a = 50, n=10^3$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/beta3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/beta4.pdf}
+\end{subfigure}
+\caption*{Velikost magnietizacije in energija v odvisnosti od $\beta$. Odvisnost magnetizacije je praktično enaka ne glede na $N$,  energija pa, kot že vemo, z $N$ pada. Ostali parametri so $t_r = 10^6, t_a = 50, n=10^3$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.8\textwidth}
+\includegraphics[width=\linewidth]{Figures/spinkor2.pdf}
+\end{subfigure}
+\caption*{Prikazana je korelacijska funkcija $\langle \sigma_1^z \sigma_j^z \rangle$. Ta izgleda konstantna, z naraščujočim beta pa korelacija narašča. Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+Sledi nekaj morda nazornejših prikazov verige za manjše $N$:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.8\textwidth}
+\includegraphics[width=\linewidth]{Figures/prikaz1.pdf}
+\end{subfigure}
+\caption*{Tukaj sem trikrat neodvisno pognal algoritem brez zunanjega magnetnega polja ($h=0$). Opazimo kar smo že vedeli - osnovno stanje je tako, da vsi spini kažejo v isto smer, ta smer pa ni enolična. Odvisno od potez in začetnih pogojev lahko pademo v enega izmed neskončnih osnovnih stanj. Ostali parametri so $t_r = 10^6$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/prikaz2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/prikaz3.pdf}
+\end{subfigure}
+\caption*{Prikazan je še primer, ko vključimo magnetno polje, na sliki označeno z oranžno puščico. Spini se v tem primeru skušajo usmeriti v nasprotno smer magnetnega polja. V limiti ničelne temperaturi bi bili spini res čisto nasprotni magnetnem polju, vendar sem algoritem poganjal le do končnega parametra $\beta$, torej opazimo majhne deviacije. Ostali parametri so $t_r = 10^6$}
+\end{figure}
+
+Na animaciji Relaks.mp4 lahko na manjši verigi vidimo, kako iz neurejenega stanja pri majhni $\beta$ počasi pridemo v stanje, kjer vsi spini kažejo v isto smer, vendar se ta smer še vedno spreminja. Na animaciji relaks2.mp4 je še primer, ko vključimo polje $h$.
+
+\section*{Heisenberg z vezjo}
+Poglejmo si še, kaj dobimo, če dodamo vez $M=0$ na vsakem koraku. Vez upoštevamo tako, da na posamezni potezi naključno izberemo  spin in vzamemo par - izbrani spin ter njegovega soseda. Izračunamo njuno vsoto (kot vektorja s 3 komponentami). Spina nato zarotiramo za naključno izbrani kot okoli te vsote.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez11.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Povprečeval sem po manj vzorcih kot na podobnem grafu prejšnje naloge, vendar bomo vseeno lahko videli glavne razlike. Na tem grafu je ta, da $C_V$ ne pride več do približno $N$, vendar se ustali pri nekoliko nižji vrednosti.  Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez22.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Odvisnost $C_V$ je v tem primeru podobna kot prej, razliko pa vidimo še v magnetizaciji, ki je zdaj jasno nič in v susceptibilnosti, ki tu izgleda približno tako, kot susceptibilnost pri ničelnem polju pri sistemu brez vezi.  Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+Primera za, $J=0,h=1$ nisem risal. Tam so vse naštete količine razen $\chi$ enake nič, kot bomo jasneje videli iz poznejših slik konfiguracij.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/grafvez44.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Spet opazimo razlike v $C_V$ in $\chi$ ter seveda magnetizaciji.  Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/betavez1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/betavez2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Pri $C_V$ ne opazimo velike razlike, kar se oblike funkcije tiče (le malce reskalirana je), pri odvisnosti $\chi$ pa je velika razlika, kot smo že prej opazili. Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/betavez3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/betavez4.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih so prikazane razne količine za tak primer verige. Odvisnost energije je podobna kot prej, magnetizacija pa je seveda konstantno enaka nič. Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.8\textwidth}
+\includegraphics[width=\linewidth]{Figures/spinkor.pdf}
+\end{subfigure}
+\caption*{Prikazana je korelacijska funkcija $\langle \sigma_1^z \sigma_j^z \rangle$. Za razliko od primera brez vezi, dobimo tu neke oscilacije. Ostali parametri so $n=1000, t_r=10^6, t_a=50$}
+\end{figure}
+
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.8\textwidth}
+\includegraphics[width=\linewidth]{Figures/prikazvez1.pdf}
+\end{subfigure}
+\caption*{Tukaj je prikazano osnovno stanje v sistemu z vezjo. Vidimo, da se spini navijajo kot nekakšna pahljača in ne kažejo vsi v isto smer kot prej (seveda, saj potem magnetizacija ne bi bila nič). Tekom cele verige najdemo spine obrnjene v vse smeri, kar prispeva tudi k ničelni energiji. Ostali parametri so $N=100,t_r = 10^8$}
+\end{figure}
+
+\end{document}
+
+\textup{d} za diferenciale
+\mathrm{det}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/maxtopl.pdf}
+\end{subfigure}
+\caption*{Kot v primeru za Nose-Hoover sem tudi tu na podatke prilagodil linearno odvisnost.}
+\end{figure}

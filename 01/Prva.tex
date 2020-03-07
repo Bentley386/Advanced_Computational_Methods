@@ -1,0 +1,224 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.5\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Prva naloga\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 19. 2. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+
+V tej nalogi bomo reševali 1D Schrödingerjevo enačbo v brezdimenzijskih enotah
+\begin{equation*}
+-\frac{1}{2}\frac{\partial^2}{\partial x^2} \Psi(x,t) + V(x) \Psi(x,t) = i \frac{\partial}{\partial t} \Psi(x,t)
+\end{equation*}
+
+\section{Opis metod}
+
+Reševanja se bomo lotili na 3 načine.
+V vsakem diskretiziramo prostor in čas in označimo $\Psi_{m,n} = \Psi (hm,\tau n)$ in ročno nastavljamo robni pogoj $\Psi(\pm L) = 0$.
+V prvem enostavno aproksimiramo odvode z končnimi diferencami in dobimo iteracijsko shemo
+\begin{align*}
+&\frac{\partial \Psi}{\partial t} \to \frac{\Psi_{m,n+1} - \Psi_{m,n}}{\tau} \\
+&\frac{\partial^2 \Psi}{\partial x^2} \to \frac{\Psi_{m+1,n} + \Psi_{m-1,n} - 2 \Psi_{m,n}}{h^2} \\
+&\Psi_{m,n+1} = \Psi_{m,n} + i \tau \left( \frac{1}{2h^2}(\Psi_{m+1,n} + \Psi_{m-1,n} - 2\Psi_{m,n}) - V_m \Psi_{m,n} \right)
+\end{align*}
+
+V drugem valovno funkcijo v naslednjem časovnem koraku dobimo z razvojem operatorja časovnega razvoja, kjer Hamiltonjan seveda spet predstavimo z diskretiziranimi odvodi:
+\begin{equation*}
+\Psi_{m,n+1} = \sum_{k=0}^K \frac{(-i\tau)^k}{k!} (H^k \Psi)_{m,n} 
+\end{equation*}
+
+V trejtem pa operator časovnega razvoja aproksimiramo z naslednjo unitarno transformacijo:
+\begin{align*}
+&\Psi_{m,n+1} = \left( 1+i \frac{\tau}{2}H \right)^{-1} \left(1-i\frac{\tau}{2}H \right) \Psi_{m,n} \\
+&\left( 1+i \frac{\tau}{2}H \right) \Psi_{m,n+1} = \left( 1-i \frac{\tau}{2} H \right) \Psi_{m,n}
+\end{align*}
+
+Po diskretizaciji dobimo naslednjo implicitno shemo, ki jo bom reševal z Scipyjevo (Python) metodo solve\_banded().
+\begin{align*}
+&\Psi_{m,n+1} - \frac{i \tau}{4} \left(\frac{1}{h^2}(\Psi_{m+1,n+1} + \Psi_{m-1,n+1} - 2 \Psi_{m,n+1} ) - 2 V_m \Psi_{m,n+1} \right) = \\
+&= \Psi_{m,n} + \frac{i \tau}{4}  \left(\frac{1}{h^2}(\Psi_{m+1,n} + \Psi_{m-1,n} - 2 \Psi_{m,n} ) - 2 V_m \Psi_{m,n} \right)
+\end{align*}
+
+\section{Prva naloga}
+
+Obravnavamo anharmonski oscilator z naslednjim potencialom:
+\begin{equation*}
+V(x) = \frac{1}{2} x^2 + \lambda x^4 
+\end{equation*}
+
+Za začetno valovno funkciji, katero bomo časovno razvijali si vzamemo neko lastno funkcijo navadnega harmonskega oscilatorja:
+\begin{equation*}
+\Psi^0_N(x) = \frac{1}{\pi^{1/4}\sqrt{2^N N!}} H_N (x) exp(-x^2/2)
+\end{equation*}
+
+Najprej si bomo zelo na hitro pogledali stabilnost naših metod. Tukaj bom vzel kar $\lambda = 0$, torej imamo opravka z navadnim harmonskim oscilatorjem.
+Za začetek si poglejmo časovni razvoj, pridobljen po metodi končnih diferenc. Hkrati preverimo še, ali je metoda res stabilna le za približno $\tau < h^2$:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dif1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dif2.pdf}
+\end{subfigure}
+\caption*{N označuje začetno valovno funkcijo, n pa število časovnih propagacij (potek v času je barvno prikazan). Že na levi, ko velja $\tau < h^2$ metoda po nekaj iteracijah začne vidno popuščati. V primeru na desni, ko pogoj stabilnosti ni izpolnjen pa je sploh napaka ogromna.}
+\end{figure}
+
+Poglejmo si še metodo pri kateri razvijemo operator časovnega razvoja v vrsto:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/prop1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/prop2.pdf}
+\end{subfigure}
+\caption*{Taylorjev razvoj operatorja časovne propagacije deluje zadovoljivo, če je le $\tau < h^2$, sicer je zgodba ista. V razvoju eksponenta sem upošteval prvih 11 členov (K=10).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/u1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/u2.pdf}
+\end{subfigure}
+\caption*{Metoda, kjer za operator časovnega razvoja uporabimo unitaren operator najbolje deluje tudi če izberemo $h=\tau$. Na desni izgleda graf drugače, ker gremo do večjega časa.}
+\end{figure}
+
+Sedaj si podrobneje poglejmo odvisnost napake od $\tau$. Primerjal bom le zadnji dve metodi, saj je prva občutno slabša:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napaka1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napaka2.pdf}
+\end{subfigure}
+\caption*{Na zgornjih grafih sem valovno funkcijo razvijal do časa $T=5$ za več $\tau$ in to primerjal z neko referenco (razvoj pri zelo majhnem $\tau$ in torej dobro natančnostjo). Na desni sem gledal napake še v odvisnosti od $L$. Najprej opazimo, da povečevanje parametra $K$ po $K=10$ nič ne izboljša natančnosti. Opazimo še, da ima napaka nekakšno zanimivo obnašanje saj ni  monotona funkcija. Od tu razberemo, da napaka ne bo prevelika, če vzamemo nekoliko večji $\tau$, za $L$ pa izberemo takega, da ima naša funkcija "dovolj prostora" (V primeru na desni je izgledalo, da je funkcija padla na nič pri okoli $x=3$).}
+\end{figure}
+
+
+Tukaj bom končal z analizami napak metod. Od zdaj naprej bom uporabljal le implicitno shemo, saj smo videli, da deluje najboljše. Ugotovil sem, da je za prikaz daljšega časovnega razvoja najprimernejša animacija, saj na grafih ne moremo jasno videti kaj se dogaja, ko se ti začnejo prekrivati. 
+
+Zato sem za nekaj začetnih $\Psi^0$ za več vrednosti parametra $\lambda$ naredil priložene animacije. V animaciji PrvaLambdaPol.mp4 vidimo časovni razvoj več začetnih pogojev (Več N) pri fiksni vrednosti $\lambda = 0.5$. Vpliv lambde se lepše vidi v preostalih animacijah npr. PrvaN0.mp4, kjer pri fiksnem N spreminjamo lambdo. Na animacijah je za predstavo z rdečo narisan še potencial. Hkrati je prikazan še primer $\lambda=0$, ki služi zgolj kot nekakšna potrditev metode, saj se ne spreminja (stacionarno stanje). Animacije nam nekako kažejo kar bi lahko pričakovali: Ko $\lambda$ večamo, se "oddaljujemo" navadnem harmoničnem oscilatorju, katere lastno funkcijo smo vzeli za začetni približek. Posledično se za višje $\lambda$ funkcije obnašajo "divje" in imajo bogatejšo časovno dinamiko.
+
+\section{Druga naloga}
+
+V drugi nalogi potencial ostaja isti, naša začetna $\Psi^0$ pa bo iz izhodišča premaknjeno koherentno stanje:
+
+\begin{equation*}
+\Psi^0(x) = \phi(x-a)
+\end{equation*}
+
+Metodo že poznamo in si poglejmo samo zanimive primere.
+Prikazal sem jih na naslednjih priloženih animacijah:
+\begin{itemize}
+\item DrugaLambde1.mp4 prikazuje časovni razvoj zgornje funkcije pri več vrednosti $\lambda$. Opazimo, da za majhne vrednosti tudi po dlje časa še vedno opazimo potovanje valovnega paketa levo in desno, pri večjih $\lambda$ pa tako gibanje hitro izgine in ne ostane nič znanega. Tukaj delam z $a=1$.
+\item DrugaLambde2.mp4 prikazuje isto stvar za primer, ko $a=2$. Dinamika postane manj predvidvljiva in opazimo, da tudi za $\lambda = 0$ prej ali slej sploh ne opazimo več potovanje valovnega paketa levo in desno. Večanje parametra $a$ pri neničelnem $\lambda$ torej prispeva k "razgibanosti" rešitve.
+\item DrugaLambdeVklop.mp4 prikazuje primer, ko parameter $\lambda$ z različnimi hitrosti povečujemo iz 0. Zgornja grafa prikazujeta počasnejši vklop. Opazimo, da pri takem adiabatskem vklopu valovni paket tudi pri večjih lambda še vedno potuje levo in desno, kar še v prejšnji animaciji ni dogajalo pri istih $\lambda$ brez vklopa ni dogajalo.
+\item DrugaSunek1.mp4 prikazuje časovni razvoj primera $a=0$, kjer za kratek čas vklopimo zelo močen potencial pri $x=0$ in sledimo časovnem razvoju. A je tukaj višina sunka (Sunek je A*Gaussovka). Opazimo, da za majhne A valovna funkcija ostane približno ista, pri večjih pa iz enega vrha dobimo dva paketka, ki se ločita. Pri zelo velikih A se ločita z velikim momentom in prideta do roba $L$, kjer metoda ni več natančna.
+\item DrugaSunek2.mp4 prikazuje primera z $A<100$ na malo daljši časovni skali.
+\item DrugaValovi.mp4 prikazuje zanimiv primer, ko začnemo z več premaknjenemi valovnimi paketi in opazujemo njihovo skupno potovanje in trke. Zanimivo je videti, da kljub trkom pridemo nazaj na začetno stanje.
+\end{itemize}
+
+Podrobneje si poglejmo primere za majhne $\lambda$, preden se sploh zgodi en nihaj, da lažje opazimo tale prehod iz harmoničnega na anharmonski oscilator:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga2.pdf}
+\end{subfigure}
+\caption*{Če dobro pogledamo že opazimo, da je pri $\lambda=0.001$ na levi vrh malček nižji od tistega na desni, vendar je na tej točki to zanemarljivo (Na tako kratkem času)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga4.pdf}
+\end{subfigure}
+\caption*{Pri $\lambda=0.01$ je "preoblikovanje" valovne funkcije že zelo očitno vidno. Pri $\lambda=0.1$ pa še toliko bolj.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga6.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga7.pdf}
+\end{subfigure}
+\caption*{Če $a$ podvojimo, nam $\lambda \neq 0$ veliko hitreje uniči obliko valovnega paketa. $\lambda = 0.001$ , ki prej skorajda ni bil opazen, tukaj grobo zgleda kot $\lambda = 0.01$ pri $a=1$. Že pri $\lambda=0.01$ pa je razlika zelo velika.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga8.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga9.pdf}
+\end{subfigure}
+\caption*{Primera $a=5$ in $a=10$ še dodatno potrdita, da večanje parametra $a$ zelo močno vpliva na "zrušenje" oblike valovnega paketa.}
+\end{figure}
+
+\section{Tretja naloga}
+
+Poglejmo si še primer dvodimenzionalnega anharmonskega oscilatorja:
+\begin{equation*}
+V(x,y) = \frac{1}{2}(x^2+y^2) + \lambda x^2 y^2
+\end{equation*}
+
+Za začetno stanje si bomo izbrali produkt koherentnih stanj $\Psi^0(x,y) = \phi_0(x-a) \phi_0(y)$
+Tokrat bom za reševanje spet uporabil metodo s končnim propagatorjem ($K=10$), saj se hočem ogniti reševanju ogromnih sistemov enačb (pa tudi lažje je za sprogramirat).
+
+Podobno kot v drugi sem tudi tukaj vse predstavil z animacijami:
+Tretjaaxlambday.mp4 Predstavlja simulacijo pri danih $a, \lambda$. Če je $a=0$ se ne zgodi nič posebej zanimivega zato glejmo $a \neq 0$. V tem primeru imamo za $\lambda =0$ podobno kot prej le translacijo brez spremembe oblike, za $\lambda \neq 0$ pa dobimo zelo zanimive oblike, ki se podobno kot v 2. nalogi še bolj nepredvidljivo obnašajo, če je $a$ večji.
+
+
+\end{document}

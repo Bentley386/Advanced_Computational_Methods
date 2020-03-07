@@ -1,0 +1,1 @@
+Calculation of certain expectation values of an anharmonic oscillator using quantum Monte Carlo.

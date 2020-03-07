@@ -1,0 +1,452 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.4\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Tretja naloga\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 14. 3. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+
+Obravnavamo klasični Hamiltonjan anharmonskega oscilatorja v dveh dimenzijah:
+\begin{equation*}
+H = \frac{1}{2} p_1^2 + \frac{1}{2} p_2^2 +\frac{1}{2} q_1^2 +\frac{1}{2} q_2^2 + \lambda q_1^2 q_2^2.
+\end{equation*}
+Hamiltonove enačbe napišemo s pomočjo Poissonovega oklepaja kot
+\begin{equation*}
+\dot{x} = \{ x, H(x) \}.
+\end{equation*}
+Iz česar sledi:
+\begin{equation*}
+x(t) = \widehat{U}(t) x(0).
+\end{equation*}
+
+kjer smo uvedli unitarni Liouvillov operator $\widehat{U} = exp(t \{.,H \})$.
+Delovanje kinetičnega in potencialnega dela Liouvilliana na $x$ poznamo:
+\begin{align*}
+&exp(\tau \{ . , T \}) (q, p) = \left( q+ \frac{\partial T}{\partial p} \tau, p \right), \\
+&exp(\tau \{ . , V \}) (q, p) = \left( q, p -  \frac{\partial V}{\partial q} \tau \right).
+\end{align*}
+
+Glavno vprašanje je torej, kako operator $exp(\tau \{ . , T+V \})$ izrazimo z zgornjima operatorja. Pri tem si pomagamo s Trotter - Suzukijevimi razcepi:
+\begin{align*}
+&e^{z(A+B)} = S_n(z) + \mathcal{O}(z^{n+1}), \\
+& S_2(z) = exp \left( \frac{z}{2}A \right) exp(z B) exp \left( \frac{z}{2}A \right), \\
+& S_4(z) = S_2(x_1 z) S_2 (x_0 z) S_2( x_1 z), \\
+&x_0 = -\frac{2^{1/3}}{2-2^{1/3}}, x_1 = \frac{1}{2 - 2^{1/3}}, \\
+&S_3 (z) = e^{z p_1 A} e^{z p_2 B} e^{z p_3 A}  e^{z p_4 B} e^{zp_5 A}, \\
+& p_1 = \bar{p}_5 = 0.25 (1+ i/\sqrt{3}), p_2=\bar{p}_4 = 2p_1 , p_3 = 0.5, \\
+&exp(2z (A + B)) = S_3(z) \bar{S}_3(z) + \mathcal{O} (z^5),
+\end{align*}
+Razcepi s kompleksnimi koeficienti so sicer zelo prikladni za disipativne sisteme, a jih bom preizkusil tudi na našem konzervativnem problemu. $\bar{S}_3$ je definiran kot $S_3$ s tem, da so koeficienti $p_i$ kompleksno konjugirani.
+
+Jasno je v našem primeru $z$ enak $\tau$. $A$ in $B$ pa kinetični in potencialni del Liouvillega operatorja.
+
+\section*{Prva naloga}
+
+Obravnavamo klasični anharmonski oscilator v dveh dimenzijah. Za začetek si poglejmo, kako se zgornji razcepi obnašajo v odvisnosti od časovnega skoka $\tau$. 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake3.pdf}
+\end{subfigure}
+\caption*{Prikazana je relativna napaka energije v odvisnosti od $\tau$ za več integratorjev. Opazimo, da ima Runge-Kutta (s prilagodljivim korakom - metoda dopri5 v scipy) za to izbiro parametrov ($\lambda=0.5, t=10$) manjšo napako v primerjavi z simplektičnim integratorjem, če je $\tau$ večji od pribl. $0.1$. Hkrati opazimo, da se simplektični integratorji obnašajo po pričakovanju - najbolj natančni so tisti, ki so najvišjega reda. Pričakovano je tudi napaka večja pri večjem $\lambda$. Čez $\lambda=10$ ne bom šel zato se v odvisnost od $\lambda$ ne bom potrobneje spuščal. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/napake2.pdf}
+\end{subfigure}
+\caption*{Pri večjih časih opazimo, zakaj so simplektični integratorji v klasični mehaniki zares boljši od metode RK. Napaka le-teh je vselej približno konstantna , medtem ko pri Runge-Kutta integratorju ta s časom raste. Začetni pogoj simulacije je $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/hitrost.pdf}
+\end{subfigure}
+\caption*{Primerjali smo še časovno zahtevnost naših metod. Na $y$ osi je $t$, ki označuje (pravi) čas poganjanja algoritma na $x$ osi pa $T$ ki predstavlja simulacijo gibanja do časa $T$. RK4 je daleč najhitrejša, za simplektične metode pa so v limiti $T \to \infty$ približno enakovredne, za majhne T pa opazimo razlike. Začetni pogoj simulacije je $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+Poglejmo si še, kako je z (lokalno) ohranjenostjo faznega prostora (Liouvillov izrek). Primerjal bom metodi RK4 in $S_4$. Zaradi lažjega prikaza bom tukaj gledal enodimenzionalni anharmonski oscilator $H = 0.5\ p^2 + 0.5 \ x^2 + \lambda x^4$. Začnemo z 25 točkami na krožnici nekega radija s središčem v $(1,1)$ in jih razvijemo v času za eno časovno enoto. Spremljamo volumen novo nastalih likov, ki bi moral biti konstanten:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv2.pdf}
+\end{subfigure}
+\caption*{Začnemo z točkami na krožnici radija $0.1$. Izgleda, da se v primeru $\lambda=0$ krogi zgolj translirajo pri obeh metodah (natančneje bomo volumne izračunali kasneje). Časovna razlika med zaporednima krogama je $10$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv4.pdf}
+\end{subfigure}
+\caption*{Že pri majhnem $\lambda$ pa vidimo veliko razliko - oblika lika ni več krog ampak se vedno bolj deformira, ko razvijamo sistem v času.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv5.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Liouv6.pdf}
+\end{subfigure}
+\caption*{Povečanje $\lambda$ krog še dodatno deformira.}
+\end{figure}
+Poglejmo še, kako je res z odvisnostjo volumna(ploščine) likov od časa:
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/zadnja2.pdf}
+\end{subfigure}
+\caption*{Tukaj imamo odvisnost volumna od časa za več različnih radijev začetnega kroga. Pri $\lambda=0$ se volumen res ohranja s časom. Pri $\lambda=0.01$ je to res le za majhne začetne kroge, saj imamo se v Liouvillovem izreku zares ohranja le infinitezimalen volumen.}
+\end{figure}
+
+Očitno ima Runge- Kutta prednost v hitrosti in pod določenimi pogoji primerljivo natančnost z simplektičnimi integratorji in bi se v praksi morali nekako odločiti katero metodo je zdaj bolje uporabiti. Vendar pa je cilj naloge spoznati simplektične integratorje (in metodo RK4 že dobro poznamo), tako da bom od tu naprej uporabljal le še simplektične integratorje in sicer se bom odločil za $S4$ integrator. Poglejmo kako izgledajo tipične orbite pri $\lambda \neq 0$:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika2.pdf}
+\end{subfigure}
+\caption*{Že pri $\lambda=0.01$ najprej opazimo, da so trajektorije najprej blizu navadnega harmoničnega oscilatorja (kjer so krožnice), vendar hitro prekrijejo veliko večji del prostora. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika4.pdf}
+\end{subfigure}
+\caption*{Ko $\lambda$ malce povečamo se gibanje kar hitro začne močno razlikovati od nemotenega harmoničnega oscilatorja. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika5.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika6.pdf}
+\end{subfigure}
+\caption*{V primerjavi z dvakrat nižjim $\lambda$ lahko tukaj na poteku do časa $100$ že opazimo, kako se "eliptične trajektorje" počasi začnejo rotirati. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika7.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika8.pdf}
+\end{subfigure}
+\caption*{Še primer, ko je $\lambda= 0.3$. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika10.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika11.pdf}
+\end{subfigure}
+\caption*{Še primer, ko je $\lambda= 0.5$. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika13.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika14.pdf}
+\end{subfigure}
+\caption*{Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika15.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/dinamika16.pdf}
+\end{subfigure}
+\caption*{Pri $\lambda=3$ opazimo, da se je oblika trajektorij močno spremenila, pri $\lambda=4$ pa izgleda, da smo že v kaotičnem režimu. O točni $\lambda_C$ pri kateri preidemo v kaos bomo povedali v nadaljevanju. Časovni potek je prikazan z barvo. Uporabili smo $S_4$ razcep z $\tau=0.1$. Začetni pogoj tukaj je bil $(x,y,p_x,p_y) = (1,0,0,0.5)$}
+\end{figure}
+
+Nekateri izmed zgornjih primerov so prikazani tudi na priloženi animaciji dinamika.mp4, prehod v kaos pa lahko natančneje opazujemo na animaciji kaos.mp4, s pomočjo animacije se zdi, da kaos nastopi pri približno $\lambda=3.85$.
+
+
+
+Za karakterizacijo globalnega kaosa je pripravneje gledati fazni portret na Poincarejevi sečni ploskvi. Poženemo algoritem za več začetnih pogojev pri neki energiji in gledamo, kdaj je izpolnjen pogoj $y=0, p_y > 0$. Ko je,  narišemo novo točko na graf $(x,p_x)$. Moji začeni pogoji so bili $x_0 = y_0=0$. Vrednosti $p_{x_0}$ pa so bile izbrane na intervalu $[-2E,2E]$, začetni $p_y$ je potem določen z energijo s tem, da sem vedno vzel pozitivno predznačenega.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare1.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare2.png}
+\end{subfigure}
+\caption*{Pri $\lambda=0.01$ je fazni portret še zelo regularen in so vidni le stabilni torusi. Pri $\lambda=0.1$ že začnejo razpadati. Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare3.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare4.png}
+\end{subfigure}
+\caption*{Pri $\lambda=1$ že zelo očitno vidimo, da območja med KAM torusi postajajo kaotična. Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure} 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare5.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare6.png}
+\end{subfigure}
+\caption*{Kaotična območja se seveda z $\lambda$ večajo. Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure} 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare7.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare8.png}
+\end{subfigure}
+\caption*{Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure} 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare9.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare10.png}
+\end{subfigure}
+\caption*{Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure} 
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare12.png}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/poincare11.png}
+\end{subfigure}
+\caption*{Nekje med $\lambda=7.5$ in $\lambda=10$ razpade še zadnji torus in imamo globalen kaos. Na slikah je fazni portret za 400 različnih začetnih pogojev, vsak do časa 2000. Barve so izbrane naključno.}
+\end{figure} 
+
+\section*{Druga naloga}
+
+Preverili bomo veljavnost ekviparticijskega izreka, ki pravi, da morata biti povprečji
+\begin{equation*}
+\langle p_j^2 \rangle(t) = \frac{1}{t} \int_0^t p_j^2(s) ds 
+\end{equation*}
+za $j=x$ in $j=y$ enaki.
+Začetni pogoji bodo taki, kot pri risanju faznih portretov, s tem, da je $p_{x_0} = 0.5$. To območje v kaos zagotovo preide okoli $\lambda=3$.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi11.pdf}
+\end{subfigure}
+\caption*{Vrednosti $p_i^2$ se hitro približajo neki konstantni vrednosti in tam ostanejo. Nista enaki, torej ekviparticijski izrek še ne velja. Desna $y$ os predstavlja napako. Na desni sliki podrobneje vidimo dogajanje ob manjšem času.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi2.pdf}
+\end{subfigure}
+\caption*{Pri neničelnem $\lambda$ ekviparticijski izrek že velja - razlike kvadratov gibalnih količin gredo proti nič.  Desna $y$ os predstavlja napako}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi3.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi31.pdf}
+\end{subfigure}
+\caption*{Pri $\lambda=0.1$ je napaka še za velikostni red manjša. Poleg . Desna $y$ os predstavlja napako.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi41.pdf}
+\end{subfigure}
+\caption*{Pri $\lambda=0.5$ je napaka še za en velikostni red manjša. Desna $y$ os predstavlja napako.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi6.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi61.pdf}
+\end{subfigure}
+\caption*{Do $\lambda=2$ še napaka več ne manjša. Odvisnost $p_i^2$ tudi ni več lepo periodična kot prej, ampak imamo prisoten nekakšen šum, saj počasi prehajamo v kaotični režim.   Desna $y$ os predstavlja napako.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi7.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/ekvi8.pdf}
+\end{subfigure}
+\caption*{Pri $\lambda \geq 3$ smo že v kaotičnem režimu. Napaka se spet poveča, obnašanje $p_i^2$ pa postane manj regularno za vse čase.  Desna $y$ os predstavlja napako.}
+\end{figure}
+
+\section*{Tretja naloga}
+
+Pogledali si bomo še Trotter-Suzukijeve razcepe višjih redov.
+Iščemo aproksimacijo naslednje oblike:
+\begin{equation*}
+\exp(z(A+B)) = e^{c_1 z A} e^{d_1 z B} \dots e^{c_k z A}e^{d_k z B} + \mathcal{O}(z^{n+1}),
+\end{equation*}
+kjer je $n$ red natančnosti, $k$ pa tako imenovana dolžina razvoja. Naša naloga je torej za dan red natančnosti $n$ določiti število $k$ in pripadajoče $c_i, d_i$.
+
+Pri določanju teh neznank nam bodo pomagale BCH formule, ki nam povedo kako se operator $C$ v enačbi
+\begin{equation*}
+\exp(zA)\exp(zB) = \exp(zC)
+\end{equation*}
+izraža z operatorjema $A$ in $B$.
+Izkaže se, da lahko operator $C$ razvijemo po potencah $z$, dobimo 
+\begin{equation*}
+C = \left( A+B \right) + \left( \frac{1}{2}[A,B] \right)z + \left(\frac{1}{12} [A,[A,B]] + [B,[B,A]]\right) z^2 + \dots
+\end{equation*}
+
+S pomočjo BCH formul lahko prvo enačbo preoblikujemo v 
+\begin{equation*}
+\exp(z(A+B)) = e^{z C_1} \dots e^{z C_k} + \mathcal{O}(z^{n+1}),
+\end{equation*}
+kjer smo z $C_i$ označili $C$, ki ga pridobimo iz BCH formul, če namesto operatorja $A$ pišemo $c_i A$ namesto $B$ pa $d_i B$. Tako smo število eksponentov na desni strani enačbe prepolovili. Postopek ponavljamo, dokler na desni ne ostane le še en eksponent.
+Dobimo enačbo oblike:
+\begin{align*}
+&\exp(z(A+B)) = \exp(f(z,c_1, \dots, c_k, d_1, \dots , d_k, A, B)), \\
+&z(A+B) = f(z,c_1, \dots, c_k, d_1, \dots , d_k, A, B),
+\end{align*}
+kjer je $f$ neka polinomska funkcija v $z$, katere koeficienti vsebujejo produkte konstant $c_i, d_i$, operatorje $A$ in $B$ ter njune gnezdene komutatorje. Zaradi enostavnosti bomo pri iskanju neznanih konstant vzeli kar $z=1$. Zadnja enačba tako predstavlja sistem nelinearnih enačb, kjer zahtevamo, da je prvi člen v $z$ (torej člen brez komutatorjev) enak $A+B$ ostali členi (členi pred komutatorji) pa so nič. Rešitev sistema, da želene konstante.
+
+Potreban konstanta $k$ vnaprej ni znana. Začeli bomo z majhnim $k$ in ga povečevali, dokler ne bo zgornji sistem imel rešitve in tako dobili najmanjši možni $k$ za želeni red $n$.
+Red $n$ je določen s številom členom, ki jih upoštevamo v razvoju operatorja $C$ v formulah BCH, saj velja, da je enačbi 
+\begin{equation*}
+\exp(z(A+B)) = e^{c_1 z A} e^{d_1 z B} \dots e^{c_k z A}e^{d_k z B} + \mathcal{O}(z^{n+1}),
+\end{equation*}
+Ekvivalentna enačba
+\begin{equation*}
+e^{c_1 z A} e^{d_1 z B} \dots e^{c_k z A}e^{d_k z B} + \exp(z(A+B) + \mathcal{O}(z^{n+1})).
+\end{equation*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga8.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga9.pdf}
+\end{subfigure}
+\caption*{Primera $a=5$ in $a=10$ še dodatno potrdita, da večanje parametra $a$ zelo močno vpliva na "zrušenje" oblike valovnega paketa.}
+\end{figure}
+
+
+
+

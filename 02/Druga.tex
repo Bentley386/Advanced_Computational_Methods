@@ -1,0 +1,351 @@
+\documentclass{article}
+
+
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{romannum}
+\usepackage{physics}
+\usepackage{amsmath,amsfonts,amsthm,bm} % Math packages
+\geometry{margin=1in}
+
+\errorcontextlines 10000
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \Large
+\includegraphics[width=.5\linewidth]{../logo.pdf}\\
+        \Large
+\vspace{1cm}
+        VRM\\
+        \huge
+        \textbf{Druga naloga\\}
+\Large  
+        \vspace{1cm}
+        \textbf{Andrej Kolar - Po{\v z}un\\}
+        \vspace{0.8cm}
+ 19. 2. 2019
+
+\vfill
+\normalsize
+\end{center}. 
+\end{titlepage}
+\newpage
+\pagenumbering{arabic}
+
+Spet rešujemo 1D Schrödingerjevo enačbo v brezdimenzijskih enotah, tokrat s spektralnimi metodami:
+\begin{equation*}
+-\frac{1}{2}\frac{\partial^2}{\partial x^2} \Psi(x,t) + V(x) \Psi(x,t) = i \frac{\partial}{\partial t} \Psi(x,t)
+\end{equation*}
+
+\section*{Opis metode}
+
+Ves čas bomo obravnavali potencial
+\begin{equation*}
+V(x) = \frac{1}{2} x^2 + \lambda x^4
+\end{equation*}
+Hamiltonjan razdelimo na znan, rešen del in pertrubacijo:
+\begin{align*}
+&H = H_0 + \lambda H_1 \\
+&H_1 = x^4
+\end{align*}
+$H_0$ je harmonski oscilator, katerega lastne funkcije $\phi^0_n$ in energije $E^0_n$ poznamo:
+\begin{align*}
+&\phi^0_n(x) = \frac{1}{\pi^{1/4}\sqrt{2^n n!}} H_n (x) exp(-x^2/2) \\
+&E^0_n = n + \frac{1}{2}
+\end{align*}
+V tej bazi izračunamo matriko $H$ kot $H_{jk} = \langle \phi^0_j | H | \phi^0_k \rangle$ $j,k = 0,1,...,K$ za nek K.
+
+Lastno rešitev za celoten potencial nastavimo kot
+\begin{equation*}
+\Psi = \sum_{n=0}^K c_n \phi^0_n
+\end{equation*}
+Koeficiente razvoja in energijo pridobimo z diagonalizacijo H:
+\begin{equation*}
+H \vec{c} = E \vec{c}
+\end{equation*}
+
+Potrebovali bomo torej vrednost matričnega elementa $\langle \phi^0_j | x^4 | \phi^0_k \rangle$.
+Spomnimo se, da to lahko zapisemo s pomočjo bozonskih operatorjev $x =\frac{1}{\sqrt{2}} ( a + a^\dagger)$.
+Z uporabo lastnosti bozonskih operatorjev vidimo, da velja $x_{ij} = \langle \phi_j^0 | x |\phi_k^0 \rangle = \frac{1}{2} \sqrt{j+k+1} \delta_{|i-j|,1}$ 
+Če vmes vrinemo identiteto, vidimo, da lahko matrični element $\langle \phi_j^0 | x^4 | \phi_k^0 \rangle$ dobimo s potenciranjem te matrike na četrto.
+
+\section*{Prva naloga}
+
+Lotimo se računanja lastnih stanj in energij motenega hamiltonjana z $\lambda \neq 0$. Diagonaliziali bomo matriko $H_{ij}$ v bazi osnovnih stanj nemotenega hamiltonjana $\lambda = 0$. Uporabljal bom Scipy metodo eigh, ki diagonalizira hermitske matrike. Vemo, da mora biti hamiltonjan hermitski, zato bom vedno računal le zgornje trikotni del in ga primerno preslikal.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/PrviTest.pdf}
+\end{subfigure}
+\caption*{Za začetek sem preveril, kako se obenese metoda eigh. Na y osi je napaka različnih lastnih vektorjev/vrednosti $||Hc - Ec||_1$, na x osi pa zaporedna lastna vrednost in vektor. N predstavlja velikost matrike H. Napaka je praktično nič.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/DrugiTest2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/DrugiTest3.pdf}
+\end{subfigure}
+\caption*{Tu sem gledal, kako se peta oz. deseta nanjnižja lastna vrednost spreminja z povečevanjem velikosti matrike. Grobo izgleda, da bomo varni, če je naša matrika približno štirikrat večja. Opazimo tudi, da ima analitični izračun matričnih elementov manjšo napako pri premajhnem N, k neki konstantni vrednosti pa skonvergirata približno enako hitro.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/DrugiTest4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/TretjiTest.pdf}
+\end{subfigure}
+\caption*{Na levi sem gledal še primer $\lambda = 5$. Po pričakovanjih je v tem primeru potrebna še večja matrika, vendar tukaj tako velikih lambd ne bom gledal in se v to odvisnost ne bom poglabljal. Na desni sem gledal še odvisnost od h, pri fiksnem $L=10$. Odvisnost od h se pojavi v numeričnem izračunu matričnih elementov. Izgleda, da je tu že $h=0.3$ dovolj vendar bom zaradi varnosti kot do zdaj ostal pri $h=0.005$, saj dela metoda dovolj hitro.}
+\end{figure}
+
+Poglejmo si sedaj še nekaj lastnih stanj anharmonskega oscilatorja:
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije0.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije1.pdf}
+\end{subfigure}
+\caption*{S črtkanimi črtami so prikazane energije (leva y os) s polnimi pa $|\Psi|^2$ (desna y os). Večanje parametra lambda seveda viša energije, lastne funkcije pa se grobo rečeno ožajo in višajo.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije3.pdf}
+\end{subfigure}
+\caption*{Podobno opazimo tudi za naslednji vzbujeni stanji.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije4.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/funkcije5.pdf}
+\end{subfigure}
+\caption*{In še naslednji.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Eodn2.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Eodn.pdf}
+\end{subfigure}
+\caption*{Še odvisnost energij od zaporedne številke vzbujenih stanj za več $\lambda$. Tudi za majhne vrednosti $\lambda$ je energija takoj veliko višja in strmeje narašča. Pri velikih n opazimo, da celo nekako spremeni obliko.}
+\end{figure}
+
+Poglejmo še, kaj nam da klasičen izračun. Hamiltonove enačbe se glasijo:
+\begin{align*}
+&\dot{p} = -x - 4 \lambda x^3 \\
+&\dot{x} = p
+\end{align*}
+
+S pomočjo Thomas-Fermijevega pravila lahko zdaj semiklasično ocenimo število skonvergiranih stanj.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/portret1.pdf}
+\end{subfigure}
+\caption*{Modri krogi predstavljajo nivojnice harmonskega oscilatorja, največja usteza energiji, ki pripada 50. vzbujenem stanju torej $N=51$. Ploščina le-te je $ 2\pi 50.5$. Hkrati je prikazano več nivojnic za anharmonski oscilator z $\lambda=1$. Notri še pride tista, ki ima energijo približno $49.5$ (slika je vektorska, lahko preverimo). Numerično lahko izračunamo, da je njena ploščina približno $89$. Delež skonvergiranih stanj je torej približno $0.28$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/portret2.pdf}
+\end{subfigure}
+\caption*{Tokrat največji krog pripada stotem vzbujenem stanju torej $N=101$. Ploščina le-tega je $ 2\pi 100.5$. Nivojnica za anharmonski oscilator z $E=100$ se praktično dodakne tega kroga in ima ploščino približno $153$. Delež skonvergiranih stanj je torej približno $0.24$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/portret3.pdf}
+\end{subfigure}
+\caption*{Tokrat največji krog pripada stotem vzbujenem stanju torej $N=201$. Ploščina le-tega je $ 2\pi 200.5$. Nivojnica za anharmonski oscilator z $E=200$ se spet praktično dodakne tega kroga in ima ploščino približno $259$. Delež skonvergiranih stanj je torej približno $0.2$.}
+\end{figure}
+Glede na geometrijo faznega portreta izgleda, da bo tisti, ki se še ravno dotika kroga ustrezal začetnem pogoju $p_0^2 = 2E, x_0 = 0$, kjer je $E$ energija, ki določa krog, saj v tej točki energiji sovpadata ($\lambda$ pri $x=0$ ni pomemben) in izgleda, da je portret bolj blizu krožnico bolj ukrivljen in je ne seka.  S pomočjo te opazke lahko narišemo naslednjo odvisnost:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/delez.pdf}
+\end{subfigure}
+\caption*{Delež skonvergiranih stanj torej vztrajno pada, ko N povečujemo. Pri $N=100000$ pade že na zgolj 5\%, pri manjših N (katere sem v nalogi uporabljal) pa je od 10\%  do tudi 20 \%}
+\end{figure}
+
+
+Rezultate diagonalizacije lahko primerjamo še z rezultati perturbacijske teorije, kjer so popravki:
+\begin{align*}
+&E_n^{(1)} = \lambda \langle n | x^4 | n \rangle \\
+&E_n^{(2)} = \lambda^2 \sum_{k \neq n} \frac{|\langle k | x^4 | n \rangle |^2}{E_n^{(0)} - E_k^{(0)}} \\
+&|n^{(1)} \rangle = \lambda \sum_{k \neq n} \frac{\langle k | x^4 | n \rangle}{E_n^{(0)} - E_k^{(0)}} |k \rangle
+\end{align*}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/pert1.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/pert2.pdf}
+\end{subfigure}
+\caption*{Tukaj je primerjava numeričnih (lahko rečemo kar pravih) rezultatov za $\lambda \neq 0$ z rezultati, ki jih da teorija perturbacij. Opazimo, da ta v tem redu odpove pri približno $\lambda = 0.1$. Hkrati vidimo, da drugi red perturbacije ne prinese velike razlike v natančnosti, kot bi morda sprva mislili. Za večje $\lambda$ seveda oba reda odpovesta, drugi deluje potem celo slabše tudi, ko $\lambda < 1$. Pri perturbacijskem računu sem upošteval $N=1000$ stanj HO.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.99\textwidth}
+\includegraphics[width=\linewidth]{Figures/pert3.pdf}
+\end{subfigure}
+\caption*{Kako pa nam kaj perturbacija popravi funkcijo? Tukaj sem gledal samo prvi red, ki je lažji za izračunati. Vidimo, da potrebujemo za zadovoljivo obliko funkcij tukaj še manjšo $\lambda$ kot pri energijah in sicer največ nekje 0.05.}
+\end{figure}
+\section*{Druga naloga}
+
+Primerjajmo časovni razvoj stanj iz prejšnje naloge z današnjo metodo.
+Začetno stanje bomo razvili bo lastnih stanjih anharmonskega oscilatorja $|n\rangle$:
+\begin{equation*}
+|\Psi(0) \rangle = \sum_n |n \rangle \langle n | \Psi(0) \rangle
+\end{equation*}
+Časovni razvoj se enostavna izraža z energijami lastnih stanj $E_n$:
+\begin{equation*}
+|\Psi(t) \rangle = \sum_n |n \rangle \langle n | \Psi(0) \rangle e^{-i E_n t}
+\end{equation*}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj11.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj12.pdf}
+\end{subfigure}
+\caption*{Časovni razvoj osnovnega stanja harmonskega oscilatorja, pridobljen z implicitno (levo) metodo in z diagonalizacijo (desno). Vidimo, da sta funkciji praktično enaki.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj21.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj22.pdf}
+\end{subfigure}
+\caption*{Enaka zgodba je pri malo večjem $\lambda$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj31.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvoj32.pdf}
+\end{subfigure}
+\caption*{Metodi data isto rešitev tudi, če začnemo z začetnim stanjem $\phi_1$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvojnapake.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/razvojcas.pdf}
+\end{subfigure}
+\caption*{Na levi sem prikazal še povprečno razliko med obema metodama in vidimo, da ta nima kakšne lepe odvisnosti, vendar zgleda da z $\lambda$ vseeno trend narašča. Na desni sem primerjal se časovno zahtevnost obeh metod in tukaj spektralna metoda povsem zmaga, kar smo pričakovali, saj z eno diagonalizacijo dobimo parametre, ki nam funkcijsko opišejo časovni razvoj, medtem ko mora implicitna metoda za vsak majhen časovni korak znova reševati sistem.}
+\end{figure}
+
+\section*{Tretja naloga}
+
+Poglejmo si še Lanczosev algoritem, ki nam pretvori Hamiltonjan v tridiagonalno obliko (V tem primeru ne pridobimo veliko, saj je H že tako petdiagonalen).
+
+Odločiti se moramo za nek začetni vektor $\chi_0$ iz katerega potem po Lanczosu zgradimo celotno bazo. Izkazalo se je, da so rezultati zelo odvisni od izbire tega začetnega vektorja:
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos1.pdf}
+\end{subfigure}
+\caption*{Z roza so tukaj prikazane lastne energije, ki jih dobimo z Lanczosovim algoritmom. S horizontalnimi črtami so lastne energije, pridobljene po direktni diagonalizaciji. Te, ki se z Lanczosom ujemajo na natančnost $\epsilon$ so prikazane z zeleno barvo. Vidimo, da Lanczos da le nekaj prvih lastnih vrednosti in sicer samo tiste, ki ustrezajo sodem $n$. Vmes pa da veliko lastnih vrednosti, ki sploh niso lastne vrednosti originalnega H. To je verjetno posledica numeričnih napak, na katere je Lanczos zelo občutljiv.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos11.pdf}
+\end{subfigure}
+\caption*{Tukaj sem pogledal, koliko izmed lastnih energij, pridobljenih po Lanczosu, je tudi lastna energija Hamiltonjana (Pridobljena po direktni diagonalizaciji z $N=5000$. Opazimo nekakšno stopničastno odvisnost. Delež pa je majhen - pod 10\%}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos2.pdf}
+\end{subfigure}
+\caption*{Ista slike še za primer, ko začnemo z vektorjem $\phi_1$. Tokrat, dobimo le lastne energije, ki ustrezajo lihim $n$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos21.pdf}
+\end{subfigure}
+\caption*{Graf napake je zelo podobnem prejšnjemu.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos3.pdf}
+\end{subfigure}
+\caption*{Še primer, ko za začetni vektor vzamemo (normirano) vsoto prvih dveh $\phi$. Tokrat dobimo lasnte vrednosti za lihe in sode $n$, vendar so te veliko bolj nenatančne.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.7\textwidth}
+\includegraphics[width=\linewidth]{Figures/Lanczos31.pdf}
+\end{subfigure}
+\caption*{Zelo slabo natančnost vidimo tudi iz tega grafa.}
+\end{figure}
+
+
+
+
+\end{document}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga8.pdf}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\includegraphics[width=\linewidth]{Figures/Druga9.pdf}
+\end{subfigure}
+\caption*{Primera $a=5$ in $a=10$ še dodatno potrdita, da večanje parametra $a$ zelo močno vpliva na "zrušenje" oblike valovnega paketa.}
+\end{figure}
